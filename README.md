@@ -44,9 +44,20 @@ design-system/
 
 ## Uso en un proyecto
 
-1. Copia a la raíz del proyecto `AGENTS.md`, `agents/`, `specs/templates/`
-   y el adaptador de tu herramienta (`opencode.json`, o `CLAUDE.md` +
-   `.claude/`). Si ya tienes un `AGENTS.md`, añade su contenido al tuyo.
+1. Instala el harness en tu proyecto con el script (no sobrescribe nada):
+
+   ```sh
+   ./install.sh ../mi-proyecto [--tool claude|opencode|none] [--design]
+   ```
+   ```powershell
+   .\install.ps1 ..\mi-proyecto [-Tool claude|opencode|none] [-Design]
+   ```
+
+   Copia `AGENTS.md`, `agents/`, `specs/templates/` y el adaptador elegido
+   (por defecto Claude Code); con `--design`, también `design-system/` y su
+   workflow. Si ya existe un `CLAUDE.md`, le añade `@AGENTS.md`; el resto de
+   archivos que ya existan (p. ej. tu `AGENTS.md`) los lista para que los
+   fusiones a mano.
 2. Invoca los roles en orden. Forma universal: `rol: <nombre> <args>`.
 
 | Paso | Universal | OpenCode | Claude Code |
