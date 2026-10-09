@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "description": "Dimensiones específicas de componentes que no encajan en spacing ni typography. Usar en min-height, área táctil mínima (hit-area), tamaño de spinner, grosores de borde y multiplicadores tipográficos."
+  },
+  "border": {
+    "width": {
+      "default": 2
+    }
+  },
+  "spinner": {
+    "size": 18
+  },
+  "button": {
+    "min-height": {
+      "sm": 36,
+      "md": 44,
+      "lg": 52
+    },
+    "hit-area": 44,
+    "font-lg-multiplier": 1.125
+  }
+}

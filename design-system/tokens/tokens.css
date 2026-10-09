@@ -1,0 +1,78 @@
+/*
+ * ARCHIVO GENERADO — no editar a mano.
+ * Fuente: design-system/tokens/*.json
+ * Regenerar: node design-system/scripts/build-tokens.mjs
+ */
+:root {
+  /* colors.json */
+  --ds-color-background: #FFFFFF; /* colors.background */
+  --ds-color-surface-base: #F5F7FA; /* colors.surface.base */
+  --ds-color-surface-hover: #e8ecf2; /* colors.surface.hover */
+  --ds-color-surface-active: #d5dbe4; /* colors.surface.active */
+  --ds-color-text-primary: #1F2933; /* colors.text.primary */
+  --ds-color-text-secondary: #3E4C59; /* colors.text.secondary */
+  --ds-color-text-disabled: #9AA5B1; /* colors.text.disabled */
+  --ds-color-border-default: #D9E2EC; /* colors.border.default */
+  --ds-color-border-strong: #6B7785; /* colors.border.strong */
+  --ds-color-feedback-danger: #C0392B; /* colors.feedback.danger */
+  --ds-color-feedback-danger-hover: #a93226; /* colors.feedback.danger-hover */
+  --ds-color-feedback-warning: #9C6500; /* colors.feedback.warning */
+  --ds-color-feedback-success: #1F7A4D; /* colors.feedback.success */
+  --ds-color-feedback-info: #2763D9; /* colors.feedback.info */
+  --ds-color-feedback-info-hover: #1e5bb5; /* colors.feedback.info-hover */
+  --ds-color-feedback-info-active: #1a4fa0; /* colors.feedback.info-active */
+  --ds-color-feedback-info-tint: #eaf2ff; /* colors.feedback.info-tint */
+  --ds-color-feedback-info-tint-active: #d5e2ff; /* colors.feedback.info-tint-active */
+  --ds-color-focus: #2763D9; /* colors.focus */
+
+  /* motion.json */
+  --ds-duration-fast: 150ms; /* motion.duration.fast */
+  --ds-duration-spinner: 600ms; /* motion.duration.spinner */
+  --ds-easing-default: ease; /* motion.easing.default */
+  --ds-easing-linear: linear; /* motion.easing.linear */
+
+  /* sizes.json */
+  --ds-border-width-default: 2px; /* sizes.border.width.default */
+  --ds-spinner-size: 18px; /* sizes.spinner.size */
+  --ds-button-min-height-sm: 36px; /* sizes.button.min-height.sm */
+  --ds-button-min-height-md: 44px; /* sizes.button.min-height.md */
+  --ds-button-min-height-lg: 52px; /* sizes.button.min-height.lg */
+  --ds-button-hit-area: 44px; /* sizes.button.hit-area */
+  --ds-button-font-lg-multiplier: 1.125; /* sizes.button.font-lg-multiplier */
+
+  /* spacing.json */
+  --ds-spacing-1: 4px; /* spacing.spacing.1 */
+  --ds-spacing-2: 8px; /* spacing.spacing.2 */
+  --ds-spacing-3: 12px; /* spacing.spacing.3 */
+  --ds-spacing-4: 16px; /* spacing.spacing.4 */
+  --ds-spacing-5: 24px; /* spacing.spacing.5 */
+  --ds-spacing-6: 32px; /* spacing.spacing.6 */
+  --ds-spacing-7: 48px; /* spacing.spacing.7 */
+  --ds-spacing-8: 64px; /* spacing.spacing.8 */
+  --ds-radii-small: 4px; /* spacing.radii.small */
+  --ds-radii-medium: 8px; /* spacing.radii.medium */
+  --ds-radii-large: 12px; /* spacing.radii.large */
+  --ds-radii-full: 999px; /* spacing.radii.full */
+
+  /* typography.json */
+  --ds-font-display-size: 32px; /* typography.scale.display.size */
+  --ds-font-display-weight: 700; /* typography.scale.display.weight */
+  --ds-font-display-line-height: 1.2; /* typography.scale.display.lineHeight */
+  --ds-font-display-letter-spacing: 0; /* typography.scale.display.letterSpacing */
+  --ds-font-heading-size: 24px; /* typography.scale.heading.size */
+  --ds-font-heading-weight: 600; /* typography.scale.heading.weight */
+  --ds-font-heading-line-height: 1.3; /* typography.scale.heading.lineHeight */
+  --ds-font-heading-letter-spacing: 0; /* typography.scale.heading.letterSpacing */
+  --ds-font-subheading-size: 18px; /* typography.scale.subheading.size */
+  --ds-font-subheading-weight: 600; /* typography.scale.subheading.weight */
+  --ds-font-subheading-line-height: 1.4; /* typography.scale.subheading.lineHeight */
+  --ds-font-subheading-letter-spacing: 0; /* typography.scale.subheading.letterSpacing */
+  --ds-font-body-size: 16px; /* typography.scale.body.size */
+  --ds-font-body-weight: 400; /* typography.scale.body.weight */
+  --ds-font-body-line-height: 1.5; /* typography.scale.body.lineHeight */
+  --ds-font-body-letter-spacing: 0; /* typography.scale.body.letterSpacing */
+  --ds-font-caption-size: 13px; /* typography.scale.caption.size */
+  --ds-font-caption-weight: 400; /* typography.scale.caption.weight */
+  --ds-font-caption-line-height: 1.4; /* typography.scale.caption.lineHeight */
+  --ds-font-caption-letter-spacing: 0.4px; /* typography.scale.caption.letterSpacing */
+}

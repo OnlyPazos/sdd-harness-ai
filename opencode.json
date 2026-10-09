@@ -1,0 +1,158 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "agent": {
+    "spec-writer": {
+      "mode": "primary",
+      "description": "Entrevista al usuario y escribe specs/project_specs.md",
+      "prompt": "{file:./agents/spec-writer.md}",
+      "permission": {
+        "edit": { "*": "deny", "specs/project_specs.md": "allow" },
+        "bash": { "*": "deny" }
+      }
+    },
+    "planner": {
+      "mode": "primary",
+      "description": "Descompone la spec en specs/work_items.md",
+      "prompt": "{file:./agents/planner.md}",
+      "permission": {
+        "edit": { "*": "deny", "specs/work_items.md": "allow" },
+        "bash": { "*": "deny" }
+      }
+    },
+    "builder": {
+      "mode": "subagent",
+      "description": "Implementa exactamente un Work Item en su rama",
+      "prompt": "{file:./agents/builder.md}",
+      "permission": {
+        "edit": {
+          "*": "allow",
+          "specs/project_specs.md": "deny",
+          "design-system/**": "deny",
+          "agents/**": "deny"
+        },
+        "bash": {
+          "*": "ask",
+          "git status": "allow",
+          "git branch --show-current": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git add *": "allow",
+          "git commit *": "allow",
+          "npm test*": "allow",
+          "npx jest*": "allow",
+          "npm run test*": "allow",
+          "npm run lint*": "allow",
+          "vendor/bin/phpunit*": "allow",
+          "pytest*": "allow",
+          "git push*": "deny",
+          "git merge*": "deny",
+          "git rebase*": "deny",
+          "git checkout*": "deny",
+          "git switch*": "deny",
+          "git reset --hard*": "deny"
+        }
+      }
+    },
+    "qa": {
+      "mode": "subagent",
+      "description": "Verifica un Work Item contra su Acceptance Check; nunca corrige",
+      "prompt": "{file:./agents/qa.md}",
+      "permission": {
+        "edit": { "*": "deny", "specs/work_items.md": "allow" },
+        "bash": {
+          "*": "ask",
+          "npm test*": "allow",
+          "npx jest*": "allow",
+          "npm run test*": "allow",
+          "npm run lint*": "allow",
+          "vendor/bin/phpunit*": "allow",
+          "pytest*": "allow",
+          "curl *localhost*": "allow",
+          "curl *127.0.0.1*": "allow",
+          "git status": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git add*": "deny",
+          "git commit*": "deny",
+          "git push*": "deny",
+          "git merge*": "deny",
+          "git checkout*": "deny",
+          "git switch*": "deny",
+          "git branch*": "deny",
+          "git reset*": "deny"
+        }
+      }
+    },
+    "git-manager": {
+      "mode": "subagent",
+      "description": "Único rol que crea ramas, mergea y hace push",
+      "prompt": "{file:./agents/git-manager.md}",
+      "permission": {
+        "edit": { "*": "deny", "specs/work_items.md": "allow" },
+        "bash": {
+          "*": "deny",
+          "git status": "allow",
+          "git log*": "allow",
+          "git diff*": "allow",
+          "git branch*": "allow",
+          "git checkout*": "allow",
+          "git switch*": "allow",
+          "git fetch*": "allow",
+          "git add specs/work_items.md": "allow",
+          "git commit*": "allow",
+          "git branch -D *": "ask",
+          "git merge *": "ask",
+          "git pull*": "ask",
+          "git push *": "ask",
+          "git rebase*": "ask",
+          "git push --force*": "deny",
+          "git push -f*": "deny",
+          "git reset --hard*": "deny",
+          "git clean*": "deny"
+        }
+      }
+    },
+    "design-builder": {
+      "mode": "subagent",
+      "description": "Itera tokens y componentes dentro de design-system/",
+      "prompt": "{file:./agents/design-builder.md}",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          "design-system/**": "allow",
+          "design-system/design_system.md": "deny"
+        },
+        "bash": {
+          "*": "deny",
+          "git status": "allow",
+          "git diff*": "allow",
+          "node design-system/scripts/*": "allow"
+        }
+      }
+    },
+    "design-extractor": {
+      "mode": "subagent",
+      "description": "Documenta el sistema de diseño real en design_system.md",
+      "prompt": "{file:./agents/design-extractor.md}",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          "design-system/design_system.md": "allow",
+          "specs/templates/design_system.md": "allow"
+        },
+        "bash": {
+          "*": "deny",
+          "node design-system/scripts/check-contrast.mjs": "allow",
+          "node design-system/scripts/build-tokens.mjs --check": "allow"
+        }
+      }
+    }
+  },
+  "permission": {
+    "bash": {
+      "rm -rf *": "deny",
+      "git push --force*": "deny"
+    }
+  }
+}

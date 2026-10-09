@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--
+  Button Component — Demo y documentación
+  design-system/components/button/button.html
+
+  Uso en tu página:
+    1. Tokens (una vez por página):
+         <link rel="stylesheet" href="design-system/tokens/tokens.css">
+    2. Componente (button.css se carga sola dentro del Shadow DOM):
+         <script src="design-system/components/button/button.js"></script>
+    3. <ds-button variant="primary">Clic</ds-button>
+
+  Abre este archivo directamente en el navegador para ver todas las variantes.
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button — Demo</title>
+  <link rel="stylesheet" href="../../tokens/tokens.css">
+  <style>
+    /* Estilos de la página de demo (no forman parte del componente). */
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--ds-color-background);
+      color: var(--ds-color-text-primary);
+      padding: var(--ds-spacing-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--ds-spacing-5);
+      max-width: 720px;
+    }
+    h2 {
+      margin: 0 0 var(--ds-spacing-2);
+      font-size: var(--ds-font-subheading-size);
+      color: var(--ds-color-text-secondary);
+    }
+    .demo-row { display: flex; gap: var(--ds-spacing-4); align-items: center; flex-wrap: wrap; }
+    .surface { background: var(--ds-color-surface-base); padding: var(--ds-spacing-4); border-radius: var(--ds-radii-medium); }
+    output { font-size: var(--ds-font-caption-size); color: var(--ds-color-text-secondary); }
+  </style>
+</head>
+<body>
+  <h1>Button — Demo</h1>
+
+  <section>
+    <h2>Primario</h2>
+    <div class="demo-row">
+      <ds-button variant="primary">Botón primario</ds-button>
+      <ds-button variant="primary" disabled>Deshabilitado</ds-button>
+      <ds-button variant="primary" loading>Cargando…</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Secundario</h2>
+    <div class="demo-row">
+      <ds-button variant="secondary">Botón secundario</ds-button>
+      <ds-button variant="secondary" disabled>Deshabilitado</ds-button>
+      <ds-button variant="secondary" loading>Cargando…</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Outline</h2>
+    <div class="demo-row">
+      <ds-button variant="outline">Botón outline</ds-button>
+      <ds-button variant="outline" disabled>Deshabilitado</ds-button>
+      <ds-button variant="outline" loading>Cargando…</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ghost</h2>
+    <div class="demo-row surface">
+      <ds-button variant="ghost">Botón ghost</ds-button>
+      <ds-button variant="ghost" disabled>Deshabilitado</ds-button>
+      <ds-button variant="ghost" loading>Cargando…</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tamaños (sm mantiene 44px de zona táctil)</h2>
+    <div class="demo-row">
+      <ds-button variant="primary" size="sm">Pequeño</ds-button>
+      <ds-button variant="primary" size="md">Mediano</ds-button>
+      <ds-button variant="primary" size="lg">Grande</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Error</h2>
+    <div class="demo-row">
+      <ds-button variant="primary" error>Con error</ds-button>
+      <ds-button variant="secondary" error>Con error</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Block (ancho completo)</h2>
+    <ds-button variant="primary" block>Botón de ancho completo</ds-button>
+  </section>
+
+  <section>
+    <h2>Eventos y formulario</h2>
+    <form id="demo-form" class="demo-row">
+      <ds-button id="toggle" variant="outline">Alternar loading</ds-button>
+      <ds-button type="submit">Enviar formulario</ds-button>
+      <ds-button type="submit" disabled>Enviar (deshabilitado)</ds-button>
+      <output id="log">Sin eventos todavía.</output>
+    </form>
+  </section>
+
+  <script src="button.js"></script>
+  <script>
+    const log = document.getElementById('log');
+    const toggle = document.getElementById('toggle');
+    toggle.addEventListener('click', () => {
+      toggle.loading = true;
+      log.textContent = 'loading 1,5 s…';
+      setTimeout(() => { toggle.loading = false; log.textContent = 'loading terminado'; }, 1500);
+    });
+    document.getElementById('demo-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      log.textContent = 'submit recibido a las ' + new Date().toLocaleTimeString();
+    });
+  </script>
+</body>
+</html>

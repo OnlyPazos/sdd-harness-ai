@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "description": "Escala de espaciado y radios base de design-system. Usa estas claves (spacing.1..8, radii.*) en los componentes."
+  },
+  "spacing": {
+    "1": 4,
+    "2": 8,
+    "3": 12,
+    "4": 16,
+    "5": 24,
+    "6": 32,
+    "7": 48,
+    "8": 64
+  },
+  "radii": {
+    "small": 4,
+    "medium": 8,
+    "large": 12,
+    "full": 999
+  }
+}

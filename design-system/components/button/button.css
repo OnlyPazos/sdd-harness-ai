@@ -1,0 +1,223 @@
+/*
+ * Button Component — design-system/components/button/button.css
+ *
+ * Esta hoja se carga DENTRO del Shadow DOM de <ds-button> (la inyecta
+ * button.js). No la enlaces en tu página: allí solo hace falta
+ * tokens/tokens.css, cuyas variables --ds-* sí atraviesan el Shadow DOM.
+ *
+ * Todos los valores salen de variables generadas desde tokens/*.json:
+ *   colors.json     → --ds-color-*
+ *   spacing.json    → --ds-spacing-*, --ds-radii-*
+ *   typography.json → --ds-font-*
+ *   motion.json     → --ds-duration-*, --ds-easing-*
+ *   sizes.json      → --ds-border-width-*, --ds-spinner-size, --ds-button-*
+ */
+
+/* ── Host ───────────────────────────────────────────────── */
+:host {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+:host([block]) {
+  display: block;
+}
+
+:host([hidden]) {
+  display: none;
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+.ds-btn {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-spacing-2);
+  margin: 0;
+
+  font-family: inherit;
+  font-size: var(--ds-font-body-size);
+  font-weight: var(--ds-font-body-weight);
+  line-height: var(--ds-font-body-line-height);
+
+  padding: var(--ds-spacing-2) var(--ds-spacing-3);
+  min-height: var(--ds-button-min-height-md);
+  min-width: var(--ds-button-hit-area);
+
+  border: var(--ds-border-width-default) solid var(--ds-color-border-default);
+  border-radius: var(--ds-radii-medium);
+
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  transition: background-color var(--ds-duration-fast) var(--ds-easing-default),
+              border-color var(--ds-duration-fast) var(--ds-easing-default),
+              color var(--ds-duration-fast) var(--ds-easing-default),
+              opacity var(--ds-duration-fast) var(--ds-easing-default);
+}
+
+/* ── Foco visible ───────────────────────────────────────── */
+.ds-btn:focus-visible {
+  outline: var(--ds-border-width-default) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-width-default);
+}
+
+/* ── Disabled (exento de contraste por WCAG) ────────────── */
+.ds-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Loading ────────────────────────────────────────────── */
+.ds-btn[aria-busy="true"] {
+  cursor: wait;
+  opacity: 1;
+}
+
+/* La etiqueta se oculta visualmente pero sigue en el árbol de accesibilidad. */
+.ds-btn[aria-busy="true"] .ds-btn-label {
+  visibility: hidden;
+}
+
+.ds-btn-spinner {
+  display: none;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: var(--ds-spinner-size);
+  height: var(--ds-spinner-size);
+  border: var(--ds-border-width-default) solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--ds-radii-full);
+  animation: ds-spin var(--ds-duration-spinner) var(--ds-easing-linear) infinite;
+}
+
+.ds-btn[aria-busy="true"] .ds-btn-spinner {
+  display: block;
+}
+
+@keyframes ds-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-btn { transition: none; }
+  .ds-btn-spinner { animation-duration: calc(var(--ds-duration-spinner) * 4); }
+}
+
+/* ── Variant: Primary ───────────────────────────────────── */
+.ds-btn--primary {
+  background-color: var(--ds-color-feedback-info);
+  color: var(--ds-color-background);
+  border-color: var(--ds-color-feedback-info);
+}
+
+.ds-btn--primary:hover:not(:disabled) {
+  background-color: var(--ds-color-feedback-info-hover);
+  border-color: var(--ds-color-feedback-info-hover);
+}
+
+.ds-btn--primary:active:not(:disabled) {
+  background-color: var(--ds-color-feedback-info-active);
+  border-color: var(--ds-color-feedback-info-active);
+}
+
+/* ── Variant: Secondary ─────────────────────────────────── */
+.ds-btn--secondary {
+  background-color: var(--ds-color-surface-base);
+  color: var(--ds-color-text-primary);
+  border-color: var(--ds-color-border-strong);
+}
+
+.ds-btn--secondary:hover:not(:disabled) {
+  background-color: var(--ds-color-surface-hover);
+}
+
+.ds-btn--secondary:active:not(:disabled) {
+  background-color: var(--ds-color-surface-active);
+}
+
+/* ── Variant: Outline ───────────────────────────────────── */
+.ds-btn--outline {
+  background-color: var(--ds-color-background);
+  color: var(--ds-color-feedback-info);
+  border-color: var(--ds-color-feedback-info);
+}
+
+.ds-btn--outline:hover:not(:disabled) {
+  background-color: var(--ds-color-feedback-info-tint);
+  border-color: var(--ds-color-feedback-info-hover);
+  color: var(--ds-color-feedback-info-hover);
+}
+
+.ds-btn--outline:active:not(:disabled) {
+  background-color: var(--ds-color-feedback-info-tint-active);
+  border-color: var(--ds-color-feedback-info-active);
+  color: var(--ds-color-feedback-info-active);
+}
+
+/* ── Variant: Ghost ─────────────────────────────────────── */
+.ds-btn--ghost {
+  background-color: transparent;
+  color: var(--ds-color-text-primary);
+  border-color: transparent;
+}
+
+.ds-btn--ghost:hover:not(:disabled) {
+  background-color: var(--ds-color-surface-hover);
+}
+
+.ds-btn--ghost:active:not(:disabled) {
+  background-color: var(--ds-color-surface-active);
+}
+
+/* ── Error (se combina con cualquier variante y la sobrescribe) ── */
+.ds-btn--error {
+  background-color: var(--ds-color-feedback-danger);
+  color: var(--ds-color-background);
+  border-color: var(--ds-color-feedback-danger);
+}
+
+.ds-btn--error:hover:not(:disabled),
+.ds-btn--error:active:not(:disabled) {
+  background-color: var(--ds-color-feedback-danger-hover);
+  border-color: var(--ds-color-feedback-danger-hover);
+  color: var(--ds-color-background);
+}
+
+/* ── Tamaños ────────────────────────────────────────────── */
+.ds-btn--sm {
+  font-size: var(--ds-font-caption-size);
+  padding: var(--ds-spacing-1) var(--ds-spacing-2);
+  min-height: var(--ds-button-min-height-sm);
+}
+
+/* sm es visualmente más bajo, pero su zona clicable/táctil se amplía al
+   mínimo de sizes.button.hit-area sin alterar el layout. */
+.ds-btn--sm::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  min-width: var(--ds-button-hit-area);
+  min-height: var(--ds-button-hit-area);
+  transform: translate(-50%, -50%);
+}
+
+.ds-btn--lg {
+  font-size: calc(var(--ds-font-body-size) * var(--ds-button-font-lg-multiplier));
+  padding: var(--ds-spacing-3) var(--ds-spacing-4);
+  min-height: var(--ds-button-min-height-lg);
+}
+
+/* ── Ancho completo ─────────────────────────────────────── */
+.ds-btn--block {
+  display: flex;
+  width: 100%;
+}

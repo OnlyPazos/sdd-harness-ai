@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "description": "Duraciones y easings de movimiento para el design-system. Usar en transition y animation."
+  },
+  "duration": {
+    "fast": 150,
+    "spinner": 600
+  },
+  "easing": {
+    "default": "ease",
+    "linear": "linear"
+  }
+}

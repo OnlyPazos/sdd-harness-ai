@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "description": "Paleta base semántica de design-system. Los colores apuntan a roles (background, surface, text.*, feedback.*), no a tonos. Los pares texto/fondo buscan al menos contraste AA; corrígelo con el rol design-builder si un par falla en tu stack."
+  },
+  "background": "#FFFFFF",
+  "surface": {
+    "base": "#F5F7FA",
+    "hover": "#e8ecf2",
+    "active": "#d5dbe4"
+  },
+  "text": {
+    "primary": "#1F2933",
+    "secondary": "#3E4C59",
+    "disabled": "#9AA5B1"
+  },
+  "border": {
+    "default": "#D9E2EC",
+    "strong": "#6B7785"
+  },
+  "feedback": {
+    "danger": "#C0392B",
+    "danger-hover": "#a93226",
+    "warning": "#9C6500",
+    "success": "#1F7A4D",
+    "info": "#2763D9",
+    "info-hover": "#1e5bb5",
+    "info-active": "#1a4fa0",
+    "info-tint": "#eaf2ff",
+    "info-tint-active": "#d5e2ff"
+  },
+  "focus": "#2763D9"
+}

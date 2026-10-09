@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "description": "Pares de color que los componentes usan realmente, referenciados por ruta de colors.json. 'text' exige 4.5:1 (AA texto normal), 'large-text' 3:1, 'ui' 3:1 (bordes, foco e indicadores, WCAG 1.4.11). Al añadir una variante o componente, añade aquí sus pares. Los estados disabled están exentos por WCAG y no se listan."
+  },
+  "pairs": [
+    { "use": "text", "fg": "text.primary", "bg": "background", "where": "texto base" },
+    { "use": "text", "fg": "text.secondary", "bg": "background", "where": "texto secundario" },
+    { "use": "text", "fg": "feedback.danger", "bg": "background", "where": "mensajes de error" },
+    { "use": "text", "fg": "feedback.warning", "bg": "background", "where": "mensajes de aviso" },
+    { "use": "text", "fg": "feedback.success", "bg": "background", "where": "mensajes de éxito" },
+    { "use": "text", "fg": "feedback.info", "bg": "background", "where": "enlaces / info" },
+
+    { "use": "text", "fg": "background", "bg": "feedback.info", "where": "button primary" },
+    { "use": "text", "fg": "background", "bg": "feedback.info-hover", "where": "button primary :hover" },
+    { "use": "text", "fg": "background", "bg": "feedback.info-active", "where": "button primary :active" },
+    { "use": "text", "fg": "text.primary", "bg": "surface.base", "where": "button secondary" },
+    { "use": "text", "fg": "text.primary", "bg": "surface.hover", "where": "button secondary/ghost :hover" },
+    { "use": "text", "fg": "text.primary", "bg": "surface.active", "where": "button secondary/ghost :active" },
+    { "use": "ui", "fg": "border.strong", "bg": "background", "where": "button secondary, borde sobre página" },
+    { "use": "ui", "fg": "border.strong", "bg": "surface.base", "where": "button secondary, borde sobre su relleno" },
+    { "use": "text", "fg": "feedback.info", "bg": "background", "where": "button outline" },
+    { "use": "text", "fg": "feedback.info-hover", "bg": "feedback.info-tint", "where": "button outline :hover" },
+    { "use": "text", "fg": "feedback.info-active", "bg": "feedback.info-tint-active", "where": "button outline :active" },
+    { "use": "ui", "fg": "feedback.info", "bg": "background", "where": "button outline, borde" },
+    { "use": "text", "fg": "background", "bg": "feedback.danger", "where": "button error" },
+    { "use": "text", "fg": "background", "bg": "feedback.danger-hover", "where": "button error :hover" },
+    { "use": "ui", "fg": "focus", "bg": "background", "where": "anillo de foco" },
+    { "use": "ui", "fg": "focus", "bg": "surface.base", "where": "anillo de foco sobre superficie" }
+  ]
+}

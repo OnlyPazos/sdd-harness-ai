@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+vendor/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Configuración local de herramientas de IA (la compartida sí se versiona)
+.claude/settings.local.json
+.aider*
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs y temporales
+*.log
+npm-debug.log*
+tmp/
+.cache/
