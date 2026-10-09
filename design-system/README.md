@@ -59,6 +59,10 @@ con el atajo de tu herramienta.)
   extensiones (`.tsx`, `.vue`, `.svelte`, `.php`/`.blade.php`, `.html`…)
   y solo crea/edita componentes en esa sintaxis. Si la carpeta está vacía,
   pregunta el lenguaje antes del primer componente.
+- Si `tokens/` está vacía o le pides un sistema nuevo, `design-builder`
+  entra en **modo arranque**: te entrevista (marca, tipografía, densidad,
+  modo oscuro), propone tokens y componentes base, valida el contraste y
+  los genera tras tu confirmación.
 - Los componentes **siempre toman sus valores de `tokens/*.json`** — nunca
   colores, tamaños o espaciados sueltos.
 - Los estados de focus, disabled, loading y error, y la accesibilidad

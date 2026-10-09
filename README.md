@@ -75,7 +75,7 @@ Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 | `builder` | Código y tests de la app | Implementa UN Work Item |
 | `qa` | Solo el estado del WI | Verifica UN Work Item y las reglas de stack |
 | `git-manager` | Solo git + estado del WI | Ramas, merges, push |
-| `design-builder` | Solo `design-system/` | Tokens y componentes en el lenguaje detectado |
+| `design-builder` | Solo `design-system/` | Genera desde cero o itera tokens y componentes |
 | `design-extractor` | Solo `design_system.md` | Documenta lo que existe realmente |
 
 ## Sistema de diseño
@@ -85,8 +85,10 @@ pueden estar en React, Vue, Svelte, PHP/Blade o web estándar. Flujo:
 
 1. **Construye la base** en `design-system/` (este repo trae tokens de
    ejemplo y un Button en Web Components). Edítala a mano y usa
-   `rol: design-builder <cambio>` para ayuda puntual; ese rol solo puede
-   tocar `design-system/`.
+   `rol: design-builder <cambio>` para ayuda puntual, o
+   `rol: design-builder genera el sistema de diseño desde cero` para que
+   te entreviste y cree tokens y componentes base a partir de tu marca.
+   Ese rol solo puede tocar `design-system/`.
 2. **Cópiala a una app** si quieres iterar allí: `cp -r design-system/ mi-app/`.
 3. **Extrae la documentación**: `rol: design-extractor` genera
    `design_system.md` leyendo el código real (no descripciones), con

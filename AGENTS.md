@@ -32,7 +32,7 @@ tabla.
 | `builder` | Código de la app + estado en `work_items.md` | Implementa UN Work Item | No |
 | `qa` | Solo el estado en `work_items.md` | Verifica UN Work Item | No |
 | `git-manager` | Solo git + estado en `work_items.md` | Ramas, merges, push | Pide confirmación |
-| `design-builder` | Solo `design-system/` | Tokens y componentes | Sí |
+| `design-builder` | Solo `design-system/` | Genera e itera tokens y componentes | Sí |
 | `design-extractor` | Solo `design_system.md` | Documenta el sistema de diseño real | No |
 
 ## Flujo
@@ -40,7 +40,7 @@ tabla.
 ```
 spec-writer → planner → [por cada Work Item: git-manager (rama) → builder → qa → git-manager (merge)]
 
-design-builder ⇄ (iteración manual) → design-extractor → specs/templates/design_system.md → spec-writer
+design-builder (arranque → iteración) → design-extractor → specs/templates/design_system.md → spec-writer
 ```
 
 ## Ciclo de vida de un Work Item

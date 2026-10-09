@@ -115,7 +115,7 @@
     },
     "design-builder": {
       "mode": "subagent",
-      "description": "Itera tokens y componentes dentro de design-system/",
+      "description": "Genera desde cero o itera tokens y componentes dentro de design-system/",
       "prompt": "{file:./agents/design-builder.md}",
       "permission": {
         "edit": {
