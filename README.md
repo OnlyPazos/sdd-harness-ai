@@ -100,3 +100,7 @@ Crea `specs/templates/<stack>.md` siguiendo la estructura de las
 existentes (dependencias mínimas, estructura de carpetas, reglas de código,
 seguridad, testing, linting). `spec-writer` lista las plantillas
 disponibles automáticamente.
+
+## Licencia
+
+[MIT](LICENSE).
