@@ -1,21 +1,26 @@
 #!/usr/bin/env sh
-# Instala el harness SDD en un proyecto existente sin sobrescribir nada.
+# Instala (o actualiza) el harness SDD en un proyecto existente.
 #
-# Uso: ./install.sh <destino> [--tool claude|opencode|none] [--design]
+# Uso: ./install.sh <destino> [--tool claude|opencode|none] [--design] [--update]
 #   --tool    adaptador a copiar (por defecto: claude)
 #   --design  copia también design-system/ y su workflow de CI
+#   --update  sobrescribe los prompts del harness (agents/, .claude/commands/)
+#             con la versión actual; el resto solo se copia si falta y, si
+#             difiere, se lista para fusionarlo a mano
 set -eu
 
-usage() { echo "Uso: $0 <destino> [--tool claude|opencode|none] [--design]" >&2; exit 1; }
+usage() { echo "Uso: $0 <destino> [--tool claude|opencode|none] [--design] [--update]" >&2; exit 1; }
 
 [ $# -ge 1 ] || usage
 dest=$1; shift
 tool=claude
 design=0
+update=0
 while [ $# -gt 0 ]; do
   case $1 in
     --tool) [ $# -ge 2 ] || usage; tool=$2; shift 2 ;;
     --design) design=1; shift ;;
+    --update) update=1; shift ;;
     *) usage ;;
   esac
 done
@@ -26,21 +31,29 @@ src=$(cd "$(dirname "$0")" && pwd)
 dest=$(cd "$dest" && pwd)
 [ "$src" != "$dest" ] || { echo "El destino no puede ser el propio harness." >&2; exit 1; }
 
-# Copia un archivo o directorio (recursivo) sin sobrescribir los existentes.
+# Copia un archivo o directorio (recursivo) archivo a archivo. Con
+# "managed" como segundo argumento, --update sobrescribe los que difieran.
 install_path() {
   rel=$1
   if [ -d "$src/$rel" ]; then
-    (cd "$src" && find "$rel" -type f) | while IFS= read -r f; do install_file "$f"; done
+    (cd "$src" && find "$rel" -type f) | while IFS= read -r f; do install_file "$f" "${2:-}"; done
   else
-    install_file "$rel"
+    install_file "$rel" "${2:-}"
   fi
 }
 
 install_file() {
   f=$1
   if [ -e "$dest/$f" ]; then
-    echo "  omitido (ya existe): $f"
-    echo "$f" >> "$skiplog"
+    if cmp -s "$src/$f" "$dest/$f"; then
+      [ $update -eq 0 ] || echo "  al día: $f"
+    elif [ $update -eq 1 ] && [ "${2:-}" = managed ]; then
+      cp "$src/$f" "$dest/$f"
+      echo "  actualizado: $f"
+    else
+      echo "  omitido (ya existe y difiere): $f"
+      echo "$f" >> "$skiplog"
+    fi
   else
     mkdir -p "$dest/$(dirname "$f")"
     cp "$src/$f" "$dest/$f"
@@ -51,9 +64,10 @@ install_file() {
 skiplog=$(mktemp)
 trap 'rm -f "$skiplog"' EXIT
 
-echo "Instalando harness SDD en $dest (adaptador: $tool)"
+if [ $update -eq 1 ]; then accion=Actualizando; else accion=Instalando; fi
+echo "$accion harness SDD en $dest (adaptador: $tool)"
 install_path AGENTS.md
-install_path agents
+install_path agents managed
 install_path specs/templates
 
 case $tool in
@@ -69,7 +83,7 @@ case $tool in
     else
       install_file CLAUDE.md
     fi
-    install_path .claude/commands
+    install_path .claude/commands managed
     install_path .claude/settings.json
     ;;
   opencode)

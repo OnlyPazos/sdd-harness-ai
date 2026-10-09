@@ -58,6 +58,13 @@ design-system/
    workflow. Si ya existe un `CLAUDE.md`, le añade `@AGENTS.md`; el resto de
    archivos que ya existan (p. ej. tu `AGENTS.md`) los lista para que los
    fusiones a mano.
+
+   **Para actualizar** un proyecto a la última versión del harness, vuelve a
+   ejecutarlo con `--update` (`-Update` en PowerShell). Sobrescribe solo los
+   prompts del harness (`agents/` y `.claude/commands/`) y añade los archivos
+   nuevos. `AGENTS.md`, `specs/templates/`, `.claude/settings.json`,
+   `opencode.json` y `design-system/` nunca se sobrescriben: si difieren, se
+   listan para que los fusiones a mano. Revisa el resultado con `git diff`.
 2. Invoca los roles en orden. Forma universal: `rol: <nombre> <args>`.
 
 | Paso | Universal | OpenCode | Claude Code |
