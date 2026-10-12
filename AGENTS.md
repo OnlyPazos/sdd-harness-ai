@@ -1,3 +1,4 @@
+<!-- sdd:begin · bloque gestionado por el harness SDD: install --update lo reemplaza. Escribe tus reglas propias fuera de él. -->
 # AGENTS.md — Pipeline SDD (Spec Driven Development)
 
 Este archivo es el punto de entrada para **cualquier agente o modelo de IA**
@@ -91,3 +92,4 @@ specs/
   work_items.md           # lo genera planner
 design-system/            # base de diseño reutilizable, agnóstica de lenguaje
 ```
+<!-- sdd:end -->

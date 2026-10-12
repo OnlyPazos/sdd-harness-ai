@@ -30,6 +30,7 @@ agents/
 └── design-extractor.md
 adapters/README.md
 opencode.json                 # adaptador OpenCode
+install.sh, install.ps1       # instaladores (scripts/merge-opencode.mjs los apoya)
 .claude/
 ├── commands/sdd-<rol>.md     # adaptador Claude Code
 └── settings.json             # bloqueos globales (force push, rm -rf…)
@@ -62,11 +63,21 @@ design-system/
    fusiones a mano.
 
    **Para actualizar** un proyecto a la última versión del harness, vuelve a
-   ejecutarlo con `--update` (`-Update` en PowerShell). Sobrescribe solo los
-   prompts del harness (`agents/` y `.claude/commands/`) y añade los archivos
-   nuevos. `AGENTS.md`, `specs/templates/`, `.claude/settings.json`,
-   `opencode.json` y `design-system/` nunca se sobrescriben: si difieren, se
-   listan para que los fusiones a mano. Revisa el resultado con `git diff`.
+   ejecutarlo con `--update` (`-Update` en PowerShell):
+
+   | Archivo | Qué hace `--update` |
+   |---|---|
+   | `agents/`, `.claude/commands/` | Los sobrescribe (son del harness) |
+   | `AGENTS.md` | Reemplaza solo el bloque entre `<!-- sdd:begin -->` y `<!-- sdd:end -->`; lo que escribas fuera se conserva |
+   | `opencode.json` | Fusiona los agentes del harness y conserva tu configuración (modelos, proveedores, otros agentes). Requiere `node` |
+   | `specs/templates/`, `.claude/settings.json` | Si difieren, los lista para que los fusiones a mano |
+   | `design-system/` | Nunca lo toca: es tuyo |
+
+   Si tu `AGENTS.md` no tiene el bloque (instalaciones anteriores), fusiónalo
+   a mano una vez incluyendo los marcadores, o usa `--force` (`-Force`):
+   sobrescribe todo lo que `--update` no pueda actualizar, salvo
+   `design-system/`, y guarda antes una copia `<archivo>.bak-<fecha>`.
+   Revisa el resultado con `git diff`.
 2. Invoca los roles en orden. Forma universal: `rol: <nombre> <args>`.
 
 | Paso | Universal | OpenCode | Claude Code |
