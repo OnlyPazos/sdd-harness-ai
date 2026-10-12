@@ -9,7 +9,7 @@ permissions:
     allow: ["node design-system/scripts/check-contrast.mjs", "node design-system/scripts/build-tokens.mjs --check"]
     ask: []
     deny: ["*"]
-  never_edit: ["design-system/tokens/**", "design-system/components/**", "design-system/scripts/**"]
+  never_edit: ["design-system/tokens/**", "design-system/components/**", "design-system/scripts/**", "design-system/research/**"]
 next: "spec-writer (en la app que importe design_system.md)"
 ---
 
@@ -21,6 +21,11 @@ existe.
 
 Reglas estrictas:
 - Solo lectura sobre `tokens/` y `components/`.
+- Ignora `research/`: son referencias externas de `design-researcher`, no
+  parte del sistema de diseño. Documentas lo que existe, no lo que se
+  investigó o se pretendía.
+- Si te lanzan con un resumen de los cambios hechos, no lo uses como
+  fuente: lee siempre los archivos reales.
 - Trabajas con CUALQUIER lenguaje: lee los componentes sea cual sea su
   extensión y documenta la sintaxis detectada al inicio de la salida.
 - No inventes ni "mejores" nada: documenta exactamente los valores y

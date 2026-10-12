@@ -31,6 +31,7 @@ permite un modelo por rol, la recomendación orientativa es:
 |---|---|---|
 | spec-writer, planner, qa | Alto razonamiento | Detectar ambigüedad y verificar con rigor es donde más falla un modelo flojo |
 | builder, design-builder | Bueno en código | Volumen de edición, uso de herramientas |
+| design-researcher | Buen razonamiento + búsqueda web | Sintetizar referencias en direcciones justificadas |
 | git-manager, design-extractor | Rápido/barato | Tareas mecánicas y acotadas |
 
 - **OpenCode**: añade `"model": "<proveedor>/<modelo>"` al rol en `opencode.json`.
@@ -47,7 +48,9 @@ primarios (cámbialos con Tab); el resto son subagentes (`@builder`,
 ### Claude Code
 `CLAUDE.md` importa `AGENTS.md`. Los comandos de `.claude/commands/` cargan
 cada rol en la conversación principal, así los roles interactivos
-(spec-writer, design-builder, git-manager) pueden hacerte preguntas.
+(spec-writer, design-researcher, design-builder, git-manager) pueden
+hacerte preguntas. `/sdd-design-researcher` preautoriza `WebSearch` y
+`WebFetch` con `allowed-tools`.
 `.claude/settings.json` bloquea `push --force`, `reset --hard` y `rm -rf`,
 y pide confirmación para push/merge/rebase. Los límites por rol (p. ej. que
 qa no edite código) los aplica el propio prompt.

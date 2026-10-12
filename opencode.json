@@ -121,7 +121,8 @@
         "edit": {
           "*": "deny",
           "design-system/**": "allow",
-          "design-system/design_system.md": "deny"
+          "design-system/design_system.md": "deny",
+          "design-system/research/**": "deny"
         },
         "bash": {
           "*": "deny",
@@ -129,6 +130,19 @@
           "git diff*": "allow",
           "node design-system/scripts/*": "allow"
         }
+      }
+    },
+    "design-researcher": {
+      "mode": "subagent",
+      "description": "Investiga apps de referencia y propone direcciones de diseño",
+      "prompt": "{file:./agents/design-researcher.md}",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          "design-system/research/references.md": "allow"
+        },
+        "bash": { "*": "deny" },
+        "webfetch": "allow"
       }
     },
     "design-extractor": {

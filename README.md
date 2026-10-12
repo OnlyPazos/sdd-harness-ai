@@ -1,6 +1,6 @@
 # SDD Harness — Spec Driven Development para cualquier agente de IA
 
-Un pipeline de 7 roles (spec → plan → build → QA → git) más una base de
+Un pipeline de 8 roles (spec → plan → build → QA → git) más una base de
 sistema de diseño reutilizable. Funciona con cualquier herramienta o modelo:
 Claude Code, OpenCode, Codex, Cursor, GitHub Copilot, Gemini CLI, Aider o un
 chat sin herramientas.
@@ -25,6 +25,7 @@ agents/
 ├── builder.md
 ├── qa.md
 ├── git-manager.md
+├── design-researcher.md
 ├── design-builder.md
 └── design-extractor.md
 adapters/README.md
@@ -39,6 +40,7 @@ specs/
 design-system/
 ├── README.md
 ├── tokens/                   # JSON: colors, typography, spacing, sizes, motion
+├── research/                 # referencias de design-researcher (se genera)
 └── components/button/        # ejemplo: Web Component vanilla
 ```
 
@@ -84,7 +86,7 @@ Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 > `qa`: si verifica en la misma conversación en la que se implementó, tiende
 > a creerse al builder en lugar de comprobar.
 
-## Los 7 roles
+## Los 8 roles
 
 | Rol | Puede escribir | Ámbito |
 |---|---|---|
@@ -93,6 +95,7 @@ Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 | `builder` | Código y tests de la app | Implementa UN Work Item |
 | `qa` | Solo el estado del WI | Verifica UN Work Item y las reglas de stack |
 | `git-manager` | Solo git + estado del WI | Ramas, merges, push |
+| `design-researcher` | Solo `design-system/research/` | Investiga apps de referencia y propone direcciones |
 | `design-builder` | Solo `design-system/` | Genera desde cero o itera tokens y componentes |
 | `design-extractor` | Solo `design_system.md` | Documenta lo que existe realmente |
 
@@ -101,17 +104,24 @@ Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 Base agnóstica de lenguaje: los tokens viven en JSON y los componentes
 pueden estar en React, Vue, Svelte, PHP/Blade o web estándar. Flujo:
 
-1. **Construye la base** en `design-system/` (este repo trae tokens de
+1. **Investiga referencias** (opcional): `rol: design-researcher <temática>`
+   busca apps similares, analiza su paleta, tipografía y patrones, y te
+   propone 2–3 direcciones justificadas en `design-system/research/references.md`.
+   Tú eliges una; si ya tienes marca, sáltate este paso.
+2. **Construye la base** en `design-system/` (este repo trae tokens de
    ejemplo y un Button en Web Components). Edítala a mano y usa
    `rol: design-builder <cambio>` para ayuda puntual, o
    `rol: design-builder genera el sistema de diseño desde cero` para que
-   te entreviste y cree tokens y componentes base a partir de tu marca.
+   te entreviste y cree tokens y componentes base a partir de tu marca
+   (y de la dirección elegida en el paso 1, si existe).
    Ese rol solo puede tocar `design-system/`.
-2. **Cópiala a una app** si quieres iterar allí: `cp -r design-system/ mi-app/`.
-3. **Extrae la documentación**: `rol: design-extractor` genera
+3. **Cópiala a una app** si quieres iterar allí: `cp -r design-system/ mi-app/`.
+4. **Extrae la documentación**: `rol: design-extractor` genera
    `design_system.md` leyendo el código real (no descripciones), con
-   accesibilidad e inconsistencias detectadas.
-4. **Impórtala**: copia `design_system.md` a `specs/templates/` de la app.
+   accesibilidad e inconsistencias detectadas. Ejecútalo en un contexto
+   limpio: `design-builder` te ofrecerá lanzarlo como subagente si tu
+   herramienta lo permite.
+5. **Impórtala**: copia `design_system.md` a `specs/templates/` de la app.
    `spec-writer` lo cargará y no volverá a preguntar colores ni tipografía.
 
 ## Añadir un stack

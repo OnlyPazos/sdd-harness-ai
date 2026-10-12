@@ -55,13 +55,17 @@ ver todas las variantes.
 (Ver `AGENTS.md` y `agents/` en la raíz. Se invocan con `rol: <nombre>` o
 con el atajo de tu herramienta.)
 
+- **`design-researcher`** (opcional) investiga apps de temática similar y
+  deja en `research/references.md` su análisis y 2–3 direcciones de diseño
+  con fuentes. No toca tokens ni componentes.
 - **`design-builder`** detecta la sintaxis de `components/` por sus
   extensiones (`.tsx`, `.vue`, `.svelte`, `.php`/`.blade.php`, `.html`…)
   y solo crea/edita componentes en esa sintaxis. Si la carpeta está vacía,
   pregunta el lenguaje antes del primer componente.
 - Si `tokens/` está vacía o le pides un sistema nuevo, `design-builder`
-  entra en **modo arranque**: te entrevista (marca, tipografía, densidad,
-  modo oscuro), propone tokens y componentes base, valida el contraste y
+  entra en **modo arranque**: parte de la dirección elegida en
+  `research/references.md` si existe, te entrevista (marca, tipografía,
+  densidad, modo oscuro) en lo que falte, propone tokens y componentes base, valida el contraste y
   los genera tras tu confirmación.
 - Los componentes **siempre toman sus valores de `tokens/*.json`** — nunca
   colores, tamaños o espaciados sueltos.
@@ -69,7 +73,8 @@ con el atajo de tu herramienta.)
   (contraste WCAG AA, teclado, zonas táctiles de 44px) son obligatorios.
 - **`design-extractor`** genera `design_system.md` documentando lo que
   existe de verdad (tokens + componentes en cualquier lenguaje), su
-  conformidad de accesibilidad y las inconsistencias detectadas.
+  conformidad de accesibilidad y las inconsistencias detectadas. Se
+  ejecuta en un contexto limpio, sin la conversación de `design-builder`.
 
 ## Tokens incluidos
 

@@ -3,13 +3,13 @@ role: design-builder
 description: Genera desde cero, crea e itera tokens y componentes del sistema de diseño, solo dentro de design-system/ y en la sintaxis que ya exista.
 interactive: true
 reads: ["design-system/**"]
-writes: ["design-system/** (excepto design_system.md)"]
+writes: ["design-system/** (excepto design_system.md y research/)"]
 permissions:
   commands:
     allow: ["git status", "git diff*", "node design-system/scripts/*"]
     ask: ["otros scripts de build/preview del propio design-system"]
     deny: ["*"]
-  never_edit: ["todo lo que esté fuera de design-system/", "design-system/design_system.md"]
+  never_edit: ["todo lo que esté fuera de design-system/", "design-system/design_system.md", "design-system/research/**"]
 next: design-extractor
 ---
 
@@ -50,6 +50,12 @@ Objetivo: dejar una base coherente de tokens y un set mínimo de
 componentes a partir de la identidad del producto, no de valores
 genéricos.
 
+0. **Investigación previa**: si existe `design-system/research/references.md`
+   (lo genera `design-researcher`), léelo y parte de la dirección que el
+   usuario eligió: la entrevista se limita a lo que el archivo no cubra y
+   la propuesta del paso 2 cita las referencias en que se apoya. Si no
+   existe y el usuario no tiene marca ni referencias claras, ofrécele
+   ejecutar antes `design-researcher`; si prefiere seguir, continúa sin él.
 1. **Entrevista breve** (una sola ronda de preguntas, agrupadas):
    - Producto y tono (sobrio, cercano, técnico, lúdico…).
    - Colores de marca o referencias (hex, logo, webs que le gusten). Si
@@ -134,6 +140,21 @@ genéricos.
 - Si tienes dudas de estilo y no hay referencia clara en los tokens,
   pregunta — no inventes un token sin decirlo.
 - No escribas `design_system.md`: lo genera exclusivamente `design-extractor`.
+- No edites `research/`: es la salida de `design-researcher`.
+
+## Traspaso a design-extractor
+
+`design-extractor` audita lo que has hecho, así que debe ejecutarse SIN el
+contexto de esta conversación (igual que `qa` respecto a `builder`): si
+documenta quien acaba de construir, describe la intención en vez del
+código real. Nunca lo ejecutes tú en esta misma conversación.
+
+- Si tu herramienta puede lanzar subagentes con contexto limpio, ofrece
+  lanzar uno con la instrucción "Lee `agents/design-extractor.md` y síguelo
+  literalmente", sin pasarle resumen de tus cambios. Lánzalo solo si el
+  usuario acepta.
+- Si no puede, indica que se ejecute en una sesión nueva.
 
 Al terminar una iteración, di: "Cambios listos en design-system/. Para
-capturarlos en design_system.md, siguiente rol: **design-extractor**."
+capturarlos en design_system.md, siguiente rol: **design-extractor**, en
+un contexto limpio." y haz la oferta anterior si aplica.

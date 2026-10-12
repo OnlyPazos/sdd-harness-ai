@@ -32,6 +32,7 @@ tabla.
 | `builder` | Código de la app + estado en `work_items.md` | Implementa UN Work Item | No |
 | `qa` | Solo el estado en `work_items.md` | Verifica UN Work Item | No |
 | `git-manager` | Solo git + estado en `work_items.md` | Ramas, merges, push | Pide confirmación |
+| `design-researcher` | Solo `design-system/research/` | Investiga apps de referencia y propone direcciones de diseño | Sí |
 | `design-builder` | Solo `design-system/` | Genera e itera tokens y componentes | Sí |
 | `design-extractor` | Solo `design_system.md` | Documenta el sistema de diseño real | No |
 
@@ -40,8 +41,12 @@ tabla.
 ```
 spec-writer → planner → [por cada Work Item: git-manager (rama) → builder → qa → git-manager (merge)]
 
-design-builder (arranque → iteración) → design-extractor → specs/templates/design_system.md → spec-writer
+[design-researcher] → design-builder (arranque → iteración) → design-extractor → specs/templates/design_system.md → spec-writer
 ```
+
+`design-researcher` es opcional (si ya hay marca o referencias claras, se
+empieza en `design-builder`). `design-extractor` audita a `design-builder`
+y, como `qa`, se ejecuta en un contexto limpio.
 
 ## Ciclo de vida de un Work Item
 
