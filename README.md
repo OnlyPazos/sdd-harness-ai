@@ -35,7 +35,7 @@ install.sh, install.ps1       # instaladores (scripts/merge-opencode.mjs los apo
 ├── commands/sdd-<rol>.md     # adaptador Claude Code
 └── settings.json             # bloqueos globales (force push, rm -rf…)
 specs/
-├── templates/                # plantillas de stack: expo, express, php
+├── templates/                # plantillas de stack: astro, expo, express, php
 │                             # (+ design_system.md cuando lo importes)
 └── (project_specs.md y work_items.md se generan aquí)
 design-system/
