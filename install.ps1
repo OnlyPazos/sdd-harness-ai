@@ -4,7 +4,7 @@
 #   -Tool    adaptador a copiar (por defecto: claude)
 #   -Design  copia también design-system/ y su workflow de CI
 #   -Update  actualiza a la versión actual del harness:
-#            - agents/, .claude/commands/ y .claude/hooks/ se sobrescriben
+#            - agents/, scripts/sdd.mjs y .claude/{commands,agents,hooks}/ se sobrescriben
 #            - AGENTS.md: solo se reemplaza el bloque <!-- sdd:begin/end -->
 #            - opencode.json: se fusionan los agentes del harness (requiere node)
 #            - .claude/settings.json: se fusionan permisos y hooks (requiere node)
@@ -123,6 +123,7 @@ Write-Host "$accion harness SDD en $dest (adaptador: $Tool)"
 Install-Path 'AGENTS.md' block
 Install-Path 'agents' managed
 Install-Path 'specs/templates'
+Install-Path 'scripts/sdd.mjs' managed
 
 switch ($Tool) {
     'claude' {
@@ -139,6 +140,7 @@ switch ($Tool) {
             Install-File 'CLAUDE.md'
         }
         Install-Path '.claude/commands' managed
+        Install-Path '.claude/agents' managed
         Install-Path '.claude/hooks' managed
         Install-Path '.claude/settings.json' json
     }

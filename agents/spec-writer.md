@@ -23,11 +23,12 @@ Reglas estrictas:
    ¿Es uno de estos, una combinación, u otro?".
 
 - Si el stack coincide con una plantilla, LEE ese archivo completo y
-  cópialo tal cual dentro de la sección "Reglas base de stack" del spec
-  final. No resumas ni reinterpretes esas reglas — son decisiones ya
-  tomadas, no las cuestiones ni las vuelvas a preguntar.
-- Si el proyecto combina varios stacks (ej. app móvil + backend), incluye
-  TODAS las plantillas aplicables, cada una en su propia subsección.
+  REFERÉNCIALO en la sección "Reglas base de stack" del spec final (no lo
+  copies: copiarlo duplica decenas de KB que leen todos los roles en cada
+  Work Item). Son decisiones ya tomadas: no las cuestiones ni las vuelvas a
+  preguntar.
+- Si el proyecto combina varios stacks (ej. app móvil + backend), referencia
+  TODAS las plantillas aplicables.
 - Si el stack no tiene plantilla, dilo explícitamente ("No tengo plantilla
   base para X, estas reglas se preguntarán desde cero") y continúa.
 - Las preguntas del Paso 1 en adelante son SOLO sobre lo específico de esta
@@ -36,8 +37,8 @@ Reglas estrictas:
 ## Paso 0bis — Cargar el sistema de diseño si existe
 
 Si existe `specs/templates/design_system.md` (generado por el rol
-`design-extractor`), léelo completo y añádelo a "Reglas base de stack" en
-su propia subsección "### Sistema de diseño". No repreguntes tokens de
+`design-extractor`), léelo completo y referéncialo en "Reglas base de
+stack", igual que las plantillas de stack. No repreguntes tokens de
 color/tipografía/espaciado ya definidos. Solo pregunta qué pantallas o
 componentes nuevos hacen falta que la librería aún no cubre.
 
@@ -68,9 +69,13 @@ Produce `specs/project_specs.md` con esta estructura exacta:
 [nombre del/los stack(s) detectado(s)]
 
 ## Reglas base de stack
-[contenido completo de la(s) plantilla(s), copiado tal cual desde
-specs/templates/*.md — una subsección "### <Stack>" por cada stack aplicable,
-más "### Sistema de diseño" si existe]
+Se aplican completas, sin resumir, estas plantillas (son parte de la spec):
+- `specs/templates/<stack>.md`
+- `specs/templates/design_system.md` (si existe)
+
+### Ajustes de este proyecto
+[solo lo que esta app añade o cambia respecto a las plantillas, cada punto
+con su D-XXX; vacío si no hay ninguno]
 
 ## Glosario de dominio
 - Término: definición (evitar sinónimos ambiguos)
@@ -97,6 +102,9 @@ Prueba (AC): AC-001
 - Un Acceptance Check NUNCA dice cosas vagas como "funciona bien". Debe ser
   observable: "Al recargar la página, la nota publicada sigue visible con
   el mismo título".
+- Las plantillas referenciadas forman parte de la spec: cambiarlas en
+  mitad del proyecto es un cambio de spec. Los roles las leen con
+  `node scripts/sdd.mjs reglas`.
 - Las reglas base de stack NO generan Acceptance Checks individuales salvo
   que el usuario lo pida — son contexto persistente para `builder` y `qa`.
 - Si la spec ya existe y te piden cambios, edítala conservando los IDs: los

@@ -3,8 +3,6 @@ description: "SDD · qa — Verifica de forma independiente un Work Item contra 
 argument-hint: "WI-AC-XXX"
 ---
 
-Adopta el rol **qa** del pipeline SDD definido en AGENTS.md. Sigue literalmente estas instrucciones, incluido el bloque `permissions` del frontmatter (autoimpóntelo aunque la herramienta te permita más):
+Adopta el rol **qa** del pipeline SDD delegándolo en el subagente `sdd-qa`, para que verifique en un contexto limpio sin lo que se haya hablado en esta conversación. Pásale solo esta petición, sin añadir contexto, y muestra su informe tal cual:
 
-@agents/qa.md
-
-Petición del usuario: $ARGUMENTS
+$ARGUMENTS

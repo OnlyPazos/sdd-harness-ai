@@ -17,7 +17,16 @@
       "prompt": "{file:./agents/planner.md}",
       "permission": {
         "edit": { "*": "deny", "specs/work_items.md": "allow" },
-        "bash": { "*": "deny" }
+        "bash": { "*": "deny", "node scripts/sdd.mjs estado*": "allow" }
+      }
+    },
+    "orchestrator": {
+      "mode": "primary",
+      "description": "Recorre los Work Items lanzando @git-manager, @builder y @qa como subagentes",
+      "prompt": "{file:./agents/orchestrator.md}",
+      "permission": {
+        "edit": { "*": "deny" },
+        "bash": { "*": "deny", "node scripts/sdd.mjs estado*": "allow" }
       }
     },
     "builder": {
@@ -39,6 +48,9 @@
           "git log*": "allow",
           "git add *": "allow",
           "git commit *": "allow",
+          "node scripts/sdd.mjs show*": "allow",
+          "node scripts/sdd.mjs reglas*": "allow",
+          "node scripts/sdd.mjs estado*": "allow",
           "npm test*": "allow",
           "npx jest*": "allow",
           "npm run test*": "allow",
@@ -70,6 +82,10 @@
           "pytest*": "allow",
           "curl *localhost*": "allow",
           "curl *127.0.0.1*": "allow",
+          "node scripts/sdd.mjs show*": "allow",
+          "node scripts/sdd.mjs reglas*": "allow",
+          "node scripts/sdd.mjs estado*": "allow",
+          "node scripts/sdd.mjs nota*": "allow",
           "git status": "allow",
           "git diff*": "allow",
           "git log*": "allow",
@@ -99,8 +115,10 @@
           "git checkout*": "allow",
           "git switch*": "allow",
           "git fetch*": "allow",
-          "git add specs/work_items.md": "allow",
+          "git add specs/work_items*": "allow",
           "git commit*": "allow",
+          "node scripts/sdd.mjs estado*": "allow",
+          "node scripts/sdd.mjs archivar": "allow",
           "git branch -D *": "ask",
           "git merge *": "ask",
           "git pull*": "ask",

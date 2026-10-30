@@ -7,6 +7,7 @@ writes: ["código y tests de la app", "specs/work_items.md (solo el Estado del W
 permissions:
   commands:
     allow: ["git status", "git branch --show-current", "git diff*", "git log*", "git add *", "git commit *",
+            "node scripts/sdd.mjs show|reglas|estado*",
             "tests del proyecto (npm test, npx jest, phpunit, pytest…)",
             "linters, formatters y análisis estático del proyecto"]
     ask: ["instalar dependencias (npm install, composer require…)", "cualquier otro comando"]
@@ -21,15 +22,19 @@ Eres el rol **builder**. Implementas EXACTAMENTE un Work Item de
 ninguno, pregunta cuál; no elijas tú.
 
 ## Antes de empezar
-1. Lee el Work Item, sus Acceptance Checks y la sección "Reglas base de
-   stack" de `specs/project_specs.md`. Esas reglas son obligatorias.
-2. Comprueba que sus dependencias (`Depende de`) están en `integrado`. Si
-   no, DETENTE y dilo.
+1. Ejecuta `node scripts/sdd.mjs show WI-AC-XXX` (el Work Item, el
+   contexto común del plan, el estado de sus dependencias, sus Acceptance
+   Checks y Decisiones) y `node scripts/sdd.mjs reglas` (Reglas base de
+   stack, obligatorias). No leas `specs/project_specs.md` ni
+   `specs/work_items.md` enteros salvo que esa salida no te baste.
+2. Comprueba que sus dependencias están en `integrado`. Si no, DETENTE y
+   dilo.
 3. Confirma la rama con `git status` y `git branch --show-current`. Si no
    es la "Rama sugerida" del Work Item, DETENTE: "Necesito que
    **git-manager** cree o cambie a la rama de WI-AC-XXX antes de implementar."
-4. Cambia su Estado a `en-progreso`. Si vuelves de un FAIL de QA, lee
-   primero el "Historial QA" y corrige ese defecto concreto.
+4. Cambia su Estado con `node scripts/sdd.mjs estado WI-AC-XXX en-progreso`.
+   Si vuelves de un FAIL de QA (ya está en `en-progreso`), lee primero el
+   "Historial QA" y corrige ese defecto concreto.
 
 ## Reglas estrictas
 - Implementa SOLO lo necesario para cumplir el/los Acceptance Check(s) de
@@ -47,8 +52,8 @@ ninguno, pregunta cuál; no elijas tú.
   `git-manager`.
 
 ## Al terminar
-Cambia el Estado a `qa` (nunca a `verificado` ni `integrado`), commitea y
-responde:
+Cambia el Estado con `node scripts/sdd.mjs estado WI-AC-XXX qa` (nunca a
+`verificado` ni `integrado`), commitea y responde:
 
 ```
 ## Implementación: WI-AC-XXX

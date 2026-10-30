@@ -1,6 +1,6 @@
 # SDD Harness — Spec Driven Development para cualquier agente de IA
 
-Un pipeline de 8 roles (spec → plan → build → QA → git) más una base de
+Un pipeline de 9 roles (spec → plan → build → QA → git, y un orquestador) más una base de
 sistema de diseño reutilizable. Funciona con cualquier herramienta o modelo:
 Claude Code, OpenCode, Codex, Cursor, GitHub Copilot, Gemini CLI, Aider o un
 chat sin herramientas.
@@ -31,10 +31,13 @@ agents/
 adapters/README.md
 opencode.json                 # adaptador OpenCode
 install.sh, install.ps1       # instaladores (scripts/merge-*.mjs los apoyan)
+scripts/sdd.mjs               # lectura acotada de specs/ y cambios de Estado (lo usan los roles)
 .claude/
 ├── commands/sdd-<rol>.md     # adaptador Claude Code
+├── agents/sdd-<rol>.md       # subagentes: builder, qa, git-manager, design-extractor
 ├── hooks/sdd-timing.*        # registro de tiempos y su página
-└── settings.json             # bloqueos globales (force push, rm -rf…) y hook de tiempos
+├── hooks/sdd-notify.mjs      # aviso de escritorio cuando un rol espera
+└── settings.json             # permisos (preautoriza tests y git local) y hooks
 specs/
 ├── templates/                # plantillas de stack: astro, expo, express, php
 │                             # (+ design_system.md cuando lo importes)
@@ -90,6 +93,7 @@ design-system/
 | Implementar | `rol: builder WI-AC-001` | `@builder WI-AC-001` | `/sdd-builder WI-AC-001` |
 | Verificar | `rol: qa WI-AC-001` | `@qa WI-AC-001` | `/sdd-qa WI-AC-001` |
 | Integrar | `rol: git-manager merge WI-AC-001` | `@git-manager …` | `/sdd-git-manager …` |
+| Todo el bucle | — (requiere subagentes) | agente `orchestrator` (Tab) | `/sdd-orchestrator [WI-AC-…]` |
 
 Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 (`pendiente → en-progreso → qa → verificado → integrado`) vive en
@@ -97,9 +101,16 @@ Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 
 > Ejecuta cada rol en una sesión o contexto limpio cuando puedas, sobre todo
 > `qa`: si verifica en la misma conversación en la que se implementó, tiende
-> a creerse al builder en lugar de comprobar.
+> a creerse al builder en lugar de comprobar. Además, una conversación que
+> encadena muchos Work Items arrastra cientos de miles de tokens y cada
+> paso va más lento. `orchestrator` lo resuelve lanzando cada rol como
+> subagente; en Claude Code, `/sdd-qa` ya delega siempre en un subagente.
 
-## Los 8 roles
+`node scripts/sdd.mjs estado` muestra en qué punto está cada Work Item y
+cuál se puede empezar. Cuando no queda ninguna rama de Work Item abierta,
+`git-manager` archiva los integrados en `specs/work_items.done.md`.
+
+## Los 9 roles
 
 | Rol | Puede escribir | Ámbito |
 |---|---|---|
@@ -111,6 +122,7 @@ Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 | `design-researcher` | Solo `design-system/research/` | Investiga apps de referencia y propone direcciones |
 | `design-builder` | Solo `design-system/` | Genera desde cero o itera tokens y componentes |
 | `design-extractor` | Solo `design_system.md` | Documenta lo que existe realmente |
+| `orchestrator` | Nada | Recorre los Work Items lanzando los roles como subagentes |
 
 ## Sistema de diseño
 

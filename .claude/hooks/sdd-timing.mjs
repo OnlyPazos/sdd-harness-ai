@@ -37,7 +37,7 @@ const MAX_HERRAMIENTA_S = 10 * 60;
 // Un hueco del modelo mayor que esto es una sesión retomada, no trabajo.
 const MAX_MODELO_S = 15 * 60;
 // Roles que conversan con el usuario: sus respuestas no abren tarea nueva.
-const INTERACTIVOS = new Set(['spec-writer', 'design-researcher', 'design-builder']);
+const INTERACTIVOS = new Set(['spec-writer', 'design-researcher', 'design-builder', 'orchestrator']);
 const FASES = ['investigar', 'implementar', 'testear', 'git', 'ejecutar', 'coordinar', 'responder', 'esperando'];
 
 const args = process.argv.slice(2);

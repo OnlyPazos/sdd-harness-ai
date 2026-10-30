@@ -11,7 +11,7 @@ hace dos cosas:
 | Herramienta | Lee `AGENTS.md` | Invocar un rol | Impone permisos |
 |---|---|---|---|
 | OpenCode | Sí (`instructions`) | `@builder WI-AC-001` / Tab para primarios | Sí, por rol (`opencode.json`) |
-| Claude Code | Vía `CLAUDE.md` | `/sdd-builder WI-AC-001` | Global (`.claude/settings.json`) |
+| Claude Code | Vía `CLAUDE.md` | `/sdd-builder WI-AC-001` | Global (`.claude/settings.json`) + herramientas por subagente |
 | Codex CLI | Sí, nativo | `rol: builder WI-AC-001` | Sandbox global |
 | Cursor | Sí, nativo | `rol: builder WI-AC-001` o `@agents/builder.md` | No por rol |
 | GitHub Copilot (agent) | Sí, nativo | `rol: builder WI-AC-001` o `#file:agents/builder.md` | No por rol |
@@ -29,13 +29,21 @@ permite un modelo por rol, la recomendación orientativa es:
 
 | Rol | Necesita | Por qué |
 |---|---|---|
-| spec-writer, planner, qa | Alto razonamiento | Detectar ambigüedad y verificar con rigor es donde más falla un modelo flojo |
-| builder, design-builder | Bueno en código | Volumen de edición, uso de herramientas |
+| spec-writer, qa | Alto razonamiento | Detectar ambigüedad y verificar con rigor es donde más falla un modelo flojo |
+| builder, design-builder, orchestrator | Bueno en código | Volumen de edición, uso de herramientas |
+| planner | Medio | Descompone una spec ya cerrada; la ambigüedad la resolvió spec-writer |
 | design-researcher | Buen razonamiento + búsqueda web | Sintetizar referencias en direcciones justificadas |
 | git-manager, design-extractor | Rápido/barato | Tareas mecánicas y acotadas |
 
+Un modelo más pequeño tarda bastante menos por llamada, y en roles
+mecánicos no se nota en el resultado.
+
 - **OpenCode**: añade `"model": "<proveedor>/<modelo>"` al rol en `opencode.json`.
-- **Claude Code**: añade `model: <modelo>` al frontmatter de `.claude/commands/sdd-<rol>.md`.
+- **Claude Code**: ya vienen fijados: `/sdd-planner` con `sonnet`,
+  `/sdd-git-manager` y el subagente `sdd-git-manager` con `haiku`, y
+  `sdd-design-extractor` con `sonnet`. El resto usa el modelo de la
+  sesión (`inherit`). Cámbialo con `model:` en el frontmatter de
+  `.claude/commands/sdd-<rol>.md` o `.claude/agents/sdd-<rol>.md`.
 - Resto: el modelo de la sesión.
 
 ## Detalle por herramienta
@@ -51,11 +59,30 @@ cada rol en la conversación principal, así los roles interactivos
 (spec-writer, design-researcher, design-builder, git-manager) pueden
 hacerte preguntas. `/sdd-design-researcher` preautoriza `WebSearch` y
 `WebFetch` con `allowed-tools`.
-`.claude/settings.json` bloquea `push --force`, `reset --hard` y `rm -rf`,
-y pide confirmación para push/merge/rebase. Los límites por rol (p. ej. que
-qa no edite código) los aplica el propio prompt. Su hook `SessionEnd`
-registra los tiempos de cada sesión en `.sdd/` (ver «Medir tiempos» en el
-README).
+
+`.claude/agents/` define builder, qa, git-manager y design-extractor como
+subagentes, cada uno en un contexto limpio. Los usa `/sdd-orchestrator`, y
+`/sdd-qa` y `/sdd-design-extractor` delegan siempre en el suyo. Los
+subagentes `sdd-qa` y `sdd-git-manager` no tienen `Edit` ni `Write`:
+solo cambian el Estado con `scripts/sdd.mjs`, así que no pueden tocar
+código aunque se equivoquen.
+
+`.claude/settings.json`:
+- Preautoriza lo que los roles ejecutan a diario y no tiene riesgo (git
+  local sin merge ni push, `scripts/sdd.mjs`, tests, lint y typecheck
+  habituales), para que el pipeline no se pare a pedir permiso. Añade los
+  comandos de test de tu stack si no están.
+- Bloquea `push --force`, `reset --hard` y `rm -rf`, y pide confirmación
+  para push/merge/rebase. Si quieres que `/sdd-orchestrator` integre sin
+  esperarte, mueve `Bash(git merge:*)` a `allow` en tu
+  `.claude/settings.local.json`.
+- Hook `Notification`: aviso de escritorio cuando un rol espera un permiso
+  o una respuesta (`SDD_NOTIFY=0` lo desactiva).
+- Hook `SessionEnd`: registra los tiempos de cada sesión en `.sdd/` (ver
+  «Medir tiempos» en el README).
+
+Los límites por rol de los comandos que corren en la conversación principal
+(p. ej. que builder no cambie de rama) los aplica el propio prompt.
 
 ### Codex CLI, Cursor, GitHub Copilot
 Leen `AGENTS.md` de la raíz automáticamente. Escribe `rol: qa WI-AC-001`.

@@ -1,5 +1,35 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch --show-current)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git switch:*)",
+      "Bash(node scripts/sdd.mjs:*)",
+      "Bash(node design-system/scripts/build-tokens.mjs:*)",
+      "Bash(node design-system/scripts/check-contrast.mjs:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run check:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(npx tsc --noEmit:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier --check:*)",
+      "Bash(composer test:*)",
+      "Bash(composer analyse:*)",
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(vendor/bin/phpstan:*)",
+      "Bash(pytest:*)"
+    ],
     "deny": [
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
@@ -13,6 +43,17 @@
     ]
   },
   "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/sdd-notify.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "hooks": [

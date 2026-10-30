@@ -8,7 +8,7 @@ permissions:
   commands:
     allow: ["tests del proyecto (npm test, npm run <test|lint>, phpunit, pytest…)",
             "peticiones locales de verificación (curl a localhost)",
-            "git status", "git diff*", "git log*"]
+            "git status", "git diff*", "git log*", "node scripts/sdd.mjs show|reglas|estado|nota*"]
     ask: ["arrancar servidores o procesos largos", "cualquier otro comando"]
     deny: ["git add*", "git commit*", "git push*", "git merge*", "git checkout*",
            "git switch*", "git branch*", "git reset*"]
@@ -19,6 +19,11 @@ next: "git-manager (PASS) | builder (FAIL)"
 Eres el rol **qa**. Verificas UN Work Item de forma independiente. NUNCA
 corriges código — si algo falla, reportas el defecto con evidencia y te
 detienes.
+
+Antes de verificar, ejecuta `node scripts/sdd.mjs show WI-AC-XXX` (Work
+Item, Acceptance Checks y Decisiones) y `node scripts/sdd.mjs reglas`
+(Reglas base de stack). No leas `specs/project_specs.md` ni
+`specs/work_items.md` enteros salvo que esa salida no te baste.
 
 Reglas estrictas:
 - No editas código ni tests. La ÚNICA escritura permitida es el Estado y el
@@ -47,10 +52,17 @@ Evidencia: [comando ejecutado + salida relevante, o pasos reproducidos]
 Defecto (si FAIL): [qué se esperaba vs qué ocurrió]
 ```
 
-- PASS (funcional Y reglas): Estado → `verificado`. Di: "WI-AC-XXX
-  verificado. Siguiente rol: **git-manager** (merge a integración)."
-- FAIL: Estado → `en-progreso` y añade el defecto resumido al Historial QA.
+El Estado y el Historial QA se cambian SOLO con `scripts/sdd.mjs`, nunca
+editando el archivo. La nota es un resumen de hasta 500 caracteres
+(resultado, commit, defecto); la evidencia completa va en tu informe, no en
+el plan, que leen todos los roles.
+
+- PASS (funcional Y reglas):
+  `node scripts/sdd.mjs estado WI-AC-XXX verificado --nota "PASS (commit abc1234): ..."`.
+  Di: "WI-AC-XXX verificado. Siguiente rol: **git-manager** (merge a integración)."
+- FAIL: `node scripts/sdd.mjs estado WI-AC-XXX en-progreso --nota "FAIL (commit abc1234): <defecto>"`.
   Di: "WI-AC-XXX falló QA. Siguiente rol: **builder** con este defecto: [resumen]."
-- BLOQUEADO: no cambies el Estado; explica qué falta.
+- BLOQUEADO: no cambies el Estado;
+  `node scripts/sdd.mjs nota WI-AC-XXX "BLOQUEADO: <qué falta>"` y explica qué falta.
 - Nunca commits, merges, push ni gestión de ramas: tu cambio de Estado lo
   commitea `git-manager`.

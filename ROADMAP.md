@@ -32,23 +32,27 @@ Comprobaciones deterministas sobre `specs/`:
 - `Depende de` apunta a Work Items existentes y sin ciclos.
 - Estados válidos; ningún Work Item en curso sobre un AC `[bloqueado]`.
 
-Lo ejecutan `planner` al terminar, `qa` antes del veredicto y el CI.
+Lo ejecutan `planner` al terminar, `qa` antes del veredicto y el CI. Encaja
+como subcomando `check` de `scripts/sdd.mjs`, que ya parsea ambos archivos.
 
 ## 4. Comando `/sdd-status` (o `/sdd-next`)
-Solo lectura: lee `work_items.md` y la rama actual y dice qué rol y qué Work
-Item tocan ahora, además de avisos (p. ej. Work Items con varios FAIL de QA).
+`node scripts/sdd.mjs estado` ya da el estado y el siguiente Work Item.
+Falta el comando que lo envuelva y diga también qué rol toca (según la rama
+actual) y avise de Work Items con varios FAIL de QA.
 
-## 5. QA y design-extractor en contexto limpio
-`/sdd-qa` en la misma conversación que `/sdd-builder` hereda su
-razonamiento. Definir `qa` y `design-extractor` como subagentes en
-`.claude/agents/`, con herramientas restringidas, para que arranquen en frío.
+## 5. ~~QA y design-extractor en contexto limpio~~ (hecho)
+Subagentes en `.claude/agents/`; `/sdd-qa` y `/sdd-design-extractor`
+delegan en ellos.
 
 ## 6. Huecos en los prompts
 - **Cambios de spec tras integrar**: `planner` solo añade Work Items. Falta
   la regla para un AC `[retirado]` o modificado cuyo Work Item ya está
   `integrado` (Work Item de corrección, marcar obsoleto…).
-- **`BLOQUEADO` de QA** no deja rastro: registrarlo en el Historial QA o
-  añadir un estado `bloqueado`.
+- ~~**`BLOQUEADO` de QA** no deja rastro~~ (hecho: `sdd.mjs nota`).
+- **Migrar specs existentes** que copian las plantillas en "Reglas base de
+  stack" al formato con referencias (en kanban-board son ~125 KB).
+- **`sdd-timing`** no ve el trabajo de los subagentes (van en otro
+  transcript): el orquestador aparece como una sola tarea.
 - **Push**: ningún paso del flujo lo pide. Definir cuándo toca (tras cada
   merge a integración o al cerrar el proyecto).
 

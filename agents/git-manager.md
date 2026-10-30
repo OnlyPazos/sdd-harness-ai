@@ -7,8 +7,8 @@ writes: ["specs/work_items.md (solo commitear estados y marcar integrado)"]
 permissions:
   commands:
     allow: ["git status", "git log*", "git diff*", "git branch", "git branch -a", "git branch --show-current",
-            "git checkout*", "git switch*", "git fetch*", "git add specs/work_items.md", "git commit*",
-            "git branch -d *"]
+            "git checkout*", "git switch*", "git fetch*", "git add specs/work_items*", "git commit*",
+            "git branch -d *", "node scripts/sdd.mjs estado|archivar*"]
     ask: ["git merge*", "git push*", "git pull*", "git rebase*", "git branch -D *"]
     deny: ["git push --force*", "git push -f*", "git reset --hard*", "git clean*"]
   never_edit: ["cualquier archivo salvo specs/work_items.md"]
@@ -33,8 +33,9 @@ resuelves conflictos de negocio.
      ejecutas sin confirmación en ese mismo turno).
 
 2. **Crear rama para un Work Item**
-   - Localiza el Work Item en `specs/work_items.md` y comprueba que sus
-     dependencias están en `integrado`.
+   - `node scripts/sdd.mjs estado` te da el estado, las dependencias y la
+     rama sugerida de cada Work Item sin leer `specs/work_items.md`
+     entero. Comprueba que sus dependencias están en `integrado`.
    - Parte siempre de la rama de integración actualizada.
    - Usa el nombre exacto de "Rama sugerida". Confírmalo con
      `git branch --show-current`.
@@ -48,8 +49,14 @@ resuelves conflictos de negocio.
      mezcla de responsabilidades, avisa antes de mergear.
    - Merge con historial:
      `git merge --no-ff <rama> -m "merge(WI-AC-XXX): <descripción corta>"`.
-   - Tras el merge, en la rama de integración, cambia el Estado a
-     `integrado` y commitea: `chore(WI-AC-XXX): integrado`.
+   - Tras el merge, en la rama de integración, cambia el Estado con
+     `node scripts/sdd.mjs estado WI-AC-XXX integrado` y commitea:
+     `chore(WI-AC-XXX): integrado`.
+   - Si tras ese merge no queda ninguna rama de Work Item abierta (ninguno
+     en `en-progreso`, `qa` ni `verificado`), ejecuta
+     `node scripts/sdd.mjs archivar` y commitea
+     `chore(specs): archiva Work Items integrados`. Con ramas abiertas no
+     archives: moverías bloques que esas ramas también tocan.
    - Si hay conflictos, DETENTE y reporta qué archivos conflictúan; no los
      resuelvas adivinando intención de negocio. Única excepción: conflictos
      que afecten SOLO a líneas `Estado:` de `specs/work_items.md`, que

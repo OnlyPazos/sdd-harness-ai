@@ -36,6 +36,7 @@ tabla.
 | `design-researcher` | Solo `design-system/research/` | Investiga apps de referencia y propone direcciones de diseño | Sí |
 | `design-builder` | Solo `design-system/` | Genera e itera tokens y componentes | Sí |
 | `design-extractor` | Solo `design_system.md` | Documenta el sistema de diseño real | No |
+| `orchestrator` | Nada | Recorre los Work Items lanzando git-manager, builder y qa como subagentes | Solo para detenerse |
 
 ## Flujo
 
@@ -44,6 +45,10 @@ spec-writer → planner → [por cada Work Item: git-manager (rama) → builder 
 
 [design-researcher] → design-builder (arranque → iteración) → design-extractor → specs/templates/design_system.md → spec-writer
 ```
+
+El bucle de Work Items se puede ejecutar a mano, rol a rol, o con
+`orchestrator` si tu herramienta tiene subagentes: cada rol corre en un
+contexto limpio y la conversación principal no acumula el de todos.
 
 `design-researcher` es opcional (si ya hay marca o referencias claras, se
 empieza en `design-builder`). `design-extractor` audita a `design-builder`
@@ -62,6 +67,9 @@ fuente de verdad del avance. Cada rol solo puede hacer SUS transiciones:
 | `qa` → `en-progreso` + nota del defecto | qa (FAIL) |
 | `verificado` → `integrado` | git-manager (tras el merge) |
 
+Las transiciones se hacen con `node scripts/sdd.mjs estado <WI> <nuevo>`,
+que rechaza las que no están en la tabla, no editando el archivo a mano.
+
 ## Reglas comunes a todos los roles
 
 - **Permisos**: el bloque `permissions` del frontmatter de cada rol es
@@ -76,6 +84,15 @@ fuente de verdad del avance. Cada rol solo puede hacer SUS transiciones:
   (`WI-AC-001`, `AC-001`, `D-001`) y los nombres de rama no se traducen.
 - **Seguridad**: nunca `git push --force`, `rm -rf`, ni borrar ramas o
   historial sin confirmación explícita del usuario en ese mismo turno.
+- **Lee solo lo tuyo**: `specs/project_specs.md` y `specs/work_items.md`
+  crecen hasta cientos de KB, y cargarlos enteros ralentiza cada paso. Usa
+  `node scripts/sdd.mjs` (`estado`, `show <WI>`, `reglas`) y abre los
+  archivos completos solo si su salida no basta.
+- **Un comando por llamada**: sin encadenar con `&&`, `;` ni `cd … &&`
+  (el directorio de trabajo ya es la raíz del proyecto) y sin variables de
+  shell. Un comando compuesto no coincide con los permisos preautorizados
+  y deja el pipeline parado esperando tu aprobación. Para mensajes de
+  commit de varias líneas, usa varios `-m`.
 
 ## Estructura del repositorio
 
@@ -86,10 +103,13 @@ agents/                   # prompts canónicos de cada rol, agnósticos de herra
 adapters/README.md        # cómo conectar los roles a cada herramienta
 opencode.json             # adaptador para OpenCode
 .claude/commands/         # adaptador para Claude Code (/sdd-<rol>)
+.claude/agents/           # subagentes de Claude Code (orchestrator, /sdd-qa)
+scripts/sdd.mjs           # lectura acotada de specs/ y cambios de Estado
 specs/
   templates/              # plantillas de stack (+ design_system.md importado)
   project_specs.md        # lo genera spec-writer
   work_items.md           # lo genera planner
+  work_items.done.md      # Work Items integrados ya archivados
 design-system/            # base de diseño reutilizable, agnóstica de lenguaje
 ```
 <!-- sdd:end -->

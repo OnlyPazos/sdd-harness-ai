@@ -5,7 +5,7 @@ interactive: false
 reads: ["specs/project_specs.md", "specs/work_items.md", "código existente (solo lectura, para contexto)"]
 writes: ["specs/work_items.md"]
 permissions:
-  commands: { allow: [], ask: [], deny: ["*"] }
+  commands: { allow: ["node scripts/sdd.mjs estado*"], ask: [], deny: ["*"] }
 next: git-manager
 ---
 
@@ -21,7 +21,13 @@ Reglas estrictas:
 - Si un check es ambiguo, no está cubierto, o está `[bloqueado]` por una
   pregunta abierta, DETENTE y pide al usuario volver a `spec-writer`.
 - Si `specs/work_items.md` ya existe, NO lo regeneres desde cero: añade los
-  Work Items nuevos y conserva intacto el estado de los existentes.
+  Work Items nuevos y conserva intacto el estado de los existentes. Para
+  saber qué IDs y dependencias existen (también los archivados en
+  `specs/work_items.done.md`) usa `node scripts/sdd.mjs estado --todos`
+  en vez de leer ambos archivos enteros.
+- Las "Notas de implementación" son el contrato (API, esquema de datos,
+  archivos a tocar), no un tutorial: lo que aplique a varios Work Items va
+  una sola vez en el contexto común, al principio del archivo.
 - Produce `specs/work_items.md` con esta estructura por cada item:
 
 ```
