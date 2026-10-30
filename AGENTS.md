@@ -92,7 +92,10 @@ que rechaza las que no están en la tabla, no editando el archivo a mano.
   (el directorio de trabajo ya es la raíz del proyecto) y sin variables de
   shell. Un comando compuesto no coincide con los permisos preautorizados
   y deja el pipeline parado esperando tu aprobación. Para mensajes de
-  commit de varias líneas, usa varios `-m`.
+  commit de varias líneas, usa varios `-m`. Excepción: en un monorepo cuyos
+  subproyectos se ejecutan desde su carpeta, `cd <subcarpeta> && <comando>`
+  con un solo comando detrás (o `npm --prefix <subcarpeta>`,
+  `composer --working-dir=<subcarpeta>` si la herramienta lo admite).
 
 ## Estructura del repositorio
 
