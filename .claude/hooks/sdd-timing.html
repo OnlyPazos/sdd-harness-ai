@@ -1,0 +1,367 @@
+<!doctype html>
+<!-- Plantilla de .sdd/timing.html. sdd-timing.mjs --log sustituye el marcador
+     de DATOS por el registro; no edites el .html generado, edita este. -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiempos SDD</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f6f4;
+    --surface: #fcfcfb;
+    --border: #e4e3de;
+    --grid: #ecebe7;
+    --text: #0b0b0b;
+    --text-2: #52514e;
+    --text-3: #7a7974;
+    --accent: #2a78d6;
+    --f-investigar: #2a78d6;
+    --f-implementar: #eb6834;
+    --f-testear: #1baf7a;
+    --f-git: #eda100;
+    --f-ejecutar: #e87ba4;
+    --f-coordinar: #008300;
+    --f-responder: #6250d6;
+    --f-esperando: #b9b7af;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #121211;
+      --surface: #1a1a19;
+      --border: #2d2c2a;
+      --grid: #262624;
+      --text: #f0efec;
+      --text-2: #c3c2b7;
+      --text-3: #8f8e86;
+      --accent: #3987e5;
+      --f-investigar: #3987e5;
+      --f-implementar: #d95926;
+      --f-testear: #199e70;
+      --f-git: #c98500;
+      --f-ejecutar: #d55181;
+      --f-coordinar: #008300;
+      --f-responder: #9085e9;
+      --f-esperando: #5c5b56;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 16px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .sub { color: var(--text-3); font-size: 13px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .card > .sub { margin-bottom: 12px; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 16px; }
+  .filtros label { color: var(--text-2); font-size: 13px; display: flex; gap: 6px; align-items: center; }
+  select, input[type="checkbox"] { font: inherit; accent-color: var(--accent); }
+  select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+  .kpi .v { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .kpi .l { color: var(--text-2); font-size: 13px; }
+  .kpi .n { color: var(--text-3); font-size: 12px; }
+  .dos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .dos .card { margin-bottom: 0; }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 12px; font-size: 12px; color: var(--text-2); }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  svg { display: block; width: 100%; overflow: visible; }
+  svg text { fill: var(--text-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+  svg .eje { fill: var(--text-3); font-size: 11px; }
+  svg .grid { stroke: var(--grid); }
+  .hit { fill: transparent; cursor: default; }
+  .tabla-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--text-3); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 7px 8px; border-bottom: 1px solid var(--grid); vertical-align: middle; white-space: nowrap; }
+  tr.det td { white-space: normal; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.fila { cursor: pointer; }
+  tr.fila:hover td { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .pet { color: var(--text-2); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rol { font-weight: 600; white-space: nowrap; }
+  .barra { display: flex; gap: 2px; height: 10px; width: 160px; }
+  .barra i { display: block; height: 100%; border-radius: 2px; min-width: 2px; }
+  tr.det td { background: var(--bg); color: var(--text-2); font-size: 12px; }
+  tr.det ul { margin: 4px 0 8px; padding-left: 18px; }
+  tr.det code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--text); word-break: break-all; }
+  .vacio { color: var(--text-3); padding: 24px 0; text-align: center; }
+  #tip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 320px;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  }
+  #tip b { display: block; margin-bottom: 4px; }
+  #tip .r { display: flex; justify-content: space-between; gap: 16px; color: var(--text-2); }
+  #tip .r i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Tiempos SDD · <span id="proyecto"></span></h1>
+    <span class="sub" id="generado"></span>
+  </header>
+
+  <div class="filtros">
+    <label>Periodo
+      <select id="f-periodo">
+        <option value="7">Últimos 7 días</option>
+        <option value="30" selected>Últimos 30 días</option>
+        <option value="0">Todo</option>
+      </select>
+    </label>
+    <label>Rol <select id="f-rol"></select></label>
+    <label><input type="checkbox" id="f-cortas" checked> Ocultar tareas de menos de 30 s</label>
+  </div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card">
+    <h2>Dónde se va el tiempo, por rol</h2>
+    <div class="sub">Tiempo activo sumado. El tiempo que el modelo piensa antes de una llamada cuenta en la fase de esa llamada.</div>
+    <div class="leyenda" id="leyenda"></div>
+    <div id="g-roles"></div>
+  </section>
+
+  <section class="dos">
+    <div class="card">
+      <h2>Contexto máximo por tarea</h2>
+      <div class="sub">Miles de tokens que arrastra cada llamada al final de la tarea.</div>
+      <div id="g-ctx"></div>
+    </div>
+    <div class="card">
+      <h2>Segundos por llamada al modelo</h2>
+      <div class="sub">Media de cada tarea. Sube cuando el contexto crece.</div>
+      <div id="g-seg"></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Tareas</h2>
+    <div class="sub">Pulsa una fila para ver sus llamadas más lentas y los resultados más grandes.</div>
+    <div class="tabla-wrap"><table id="tabla"></table></div>
+  </section>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const DATOS = /*DATOS*/null;
+
+const $ = (s) => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dur = (s) => {
+  s = Math.round(s);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s`;
+  return `${Math.floor(s / 3600)}h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}m`;
+};
+const k = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
+const fecha = (iso) => new Date(iso).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const mediana = (xs) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : 0; };
+const color = (f) => `var(--f-${f})`;
+const etiqueta = (t) => (t.rol === '(sin rol)' ? 'sin rol' : t.rol);
+
+function el(tag, attrs = {}, parent) {
+  const n = document.createElementNS(NS, tag);
+  for (const [a, v] of Object.entries(attrs)) n.setAttribute(a, v);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+// --- Tooltip ---------------------------------------------------------------
+const tip = $('#tip');
+function mostrar(ev, html) {
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+  const r = tip.getBoundingClientRect();
+  const x = Math.min(ev.clientX + 14, innerWidth - r.width - 8);
+  const y = ev.clientY + 14 + r.height > innerHeight ? ev.clientY - r.height - 10 : ev.clientY + 14;
+  tip.style.left = `${Math.max(8, x)}px`;
+  tip.style.top = `${y}px`;
+}
+const ocultar = () => { tip.style.display = 'none'; };
+function conTip(nodo, html) {
+  nodo.addEventListener('pointermove', (ev) => mostrar(ev, html()));
+  nodo.addEventListener('pointerleave', ocultar);
+}
+const filasFases = (fases, total) => DATOS.fases.filter((f) => fases[f] >= 1)
+  .map((f) => `<div class="r"><span><i style="background:${color(f)}"></i>${f}</span><span>${dur(fases[f])} · ${Math.round((fases[f] / total) * 100)}%</span></div>`).join('');
+
+// --- Filtros ---------------------------------------------------------------
+function tareasFiltradas() {
+  const dias = Number($('#f-periodo').value);
+  const rol = $('#f-rol').value;
+  const desde = dias ? Date.now() - dias * 864e5 : 0;
+  return DATOS.tareas.filter((t) => Date.parse(t.inicio) >= desde
+    && (!rol || t.rol === rol)
+    && (!$('#f-cortas').checked || t.activo >= 30));
+}
+
+// --- KPIs ------------------------------------------------------------------
+function kpis(ts) {
+  const total = ts.reduce((s, t) => s + t.activo, 0);
+  const espera = ts.reduce((s, t) => s + t.fases.esperando, 0);
+  const items = [
+    ['Tiempo activo', dur(total), `${dur(espera)} esperando permisos o respuestas`],
+    ['Tareas', ts.length, `${new Set(ts.map((t) => t.sesion)).size} sesiones`],
+    ['Segundos por llamada', mediana(ts.map((t) => t.modelo / t.llamadas)).toFixed(1), 'mediana por tarea'],
+    ['Contexto máximo', k(mediana(ts.map((t) => t.ctxMax))), `mediana · el mayor, ${k(Math.max(0, ...ts.map((t) => t.ctxMax)))}`],
+  ];
+  $('#kpis').innerHTML = items.map(([l, v, n]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+}
+
+// --- Barras apiladas por rol -----------------------------------------------
+function roles(ts) {
+  const cont = $('#g-roles');
+  cont.innerHTML = '';
+  const por = new Map();
+  for (const t of ts) {
+    const r = por.get(t.rol) ?? { rol: t.rol, total: 0, n: 0, fases: Object.fromEntries(DATOS.fases.map((f) => [f, 0])) };
+    for (const f of DATOS.fases) r.fases[f] += t.fases[f];
+    r.total += t.activo;
+    r.n++;
+    por.set(t.rol, r);
+  }
+  const filas = [...por.values()].sort((a, b) => b.total - a.total);
+  if (!filas.length) { cont.innerHTML = '<div class="vacio">No hay tareas con estos filtros.</div>'; return; }
+
+  const W = cont.clientWidth || 800, izq = 120, der = 64, alto = 20, paso = 32;
+  const H = filas.length * paso;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Tiempo por rol y fase' }, cont);
+  const max = Math.max(...filas.map((r) => r.total));
+  const ancho = W - izq - der;
+  filas.forEach((r, i) => {
+    const y = i * paso + (paso - alto) / 2;
+    el('text', { x: izq - 10, y: y + alto / 2 + 4, 'text-anchor': 'end' }, svg).textContent = etiqueta(r);
+    let x = izq;
+    const visibles = DATOS.fases.filter((f) => r.fases[f] > 0);
+    visibles.forEach((f, j) => {
+      const w = (r.fases[f] / max) * ancho;
+      if (w < 0.5) return;
+      const gap = j < visibles.length - 1 ? 2 : 0;
+      const ultimo = j === visibles.length - 1;
+      // Solo el extremo final de la barra va redondeado.
+      const rect = ultimo
+        ? el('path', { d: `M${x},${y}h${Math.max(0, w - 4)}a4,4 0 0 1 4,4v${alto - 8}a4,4 0 0 1 -4,4h${-Math.max(0, w - 4)}z`, fill: color(f) }, svg)
+        : el('rect', { x, y, width: Math.max(0.5, w - gap), height: alto, fill: color(f) }, svg);
+      conTip(rect, () => `<b>${esc(etiqueta(r))} · ${f}</b><div class="r"><span>${dur(r.fases[f])}</span><span>${Math.round((r.fases[f] / r.total) * 100)}% del rol</span></div>`);
+      x += w;
+    });
+    el('text', { x: izq + (r.total / max) * ancho + 8, y: y + alto / 2 + 4 }, svg).textContent = dur(r.total);
+    const hit = el('rect', { x: 0, y: i * paso, width: izq, height: paso, class: 'hit' }, svg);
+    conTip(hit, () => `<b>${esc(etiqueta(r))} · ${r.n} tareas · ${dur(r.total)}</b>${filasFases(r.fases, r.total)}`);
+  });
+}
+
+// --- Puntos a lo largo del tiempo ------------------------------------------
+function puntos(sel, ts, valor, formato) {
+  const cont = $(sel);
+  cont.innerHTML = '';
+  if (!ts.length) { cont.innerHTML = '<div class="vacio">Sin datos.</div>'; return; }
+  const W = cont.clientWidth || 480, H = 220, izq = 44, der = 12, arr = 10, abj = 26;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img' }, cont);
+  const t0 = Date.parse(ts[0].inicio), t1 = Date.parse(ts.at(-1).inicio);
+  const max = Math.max(...ts.map(valor)) * 1.1 || 1;
+  const sx = (t) => izq + (t1 > t0 ? ((Date.parse(t.inicio) - t0) / (t1 - t0)) : 0.5) * (W - izq - der);
+  const sy = (v) => arr + (1 - v / max) * (H - arr - abj);
+
+  for (let i = 0; i <= 4; i++) {
+    const v = (max / 4) * i, y = sy(v);
+    el('line', { x1: izq, x2: W - der, y1: y, y2: y, class: 'grid' }, svg);
+    el('text', { x: izq - 6, y: y + 4, 'text-anchor': 'end', class: 'eje' }, svg).textContent = formato(v);
+  }
+  // Marcas repartidas en el tiempo, sin repetir día.
+  const marcas = Math.max(2, Math.min(5, Math.floor((W - izq - der) / 70)));
+  const vistas = new Set();
+  for (let i = 0; i < marcas; i++) {
+    const t = new Date(t0 + ((t1 - t0) * i) / (marcas - 1));
+    const txt = t.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+    if (vistas.has(txt)) continue;
+    vistas.add(txt);
+    el('text', { x: sx({ inicio: t.toISOString() }), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === marcas - 1 ? 'end' : 'middle', class: 'eje' }, svg)
+      .textContent = txt;
+  }
+  for (const t of ts) {
+    const cx = sx(t), cy = sy(valor(t));
+    el('circle', { cx, cy, r: 4, fill: 'var(--accent)', stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+    const hit = el('circle', { cx, cy, r: 10, class: 'hit' }, svg);
+    conTip(hit, () => `<b>${esc(etiqueta(t))} ${esc(t.wi)}</b><div class="r"><span>${fecha(t.inicio)}</span><span>${formato(valor(t))}</span></div>`
+      + (t.peticion ? `<div style="margin-top:4px">${esc(t.peticion.slice(0, 120))}</div>` : ''));
+  }
+}
+
+// --- Tabla -----------------------------------------------------------------
+function tabla(ts) {
+  const filas = [...ts].reverse();
+  const cab = '<tr><th>Inicio</th><th>Rol</th><th>Petición</th><th>WI</th><th class="num">Activo</th><th>Fases</th><th class="num">s/llam</th><th class="num">Ctx máx</th></tr>';
+  $('#tabla').innerHTML = cab + (filas.length ? filas.map((t, i) => `
+    <tr class="fila" data-i="${i}">
+      <td class="num">${fecha(t.inicio)}</td>
+      <td class="rol">${esc(etiqueta(t))}</td>
+      <td class="pet" title="${esc(t.peticion)}">${esc(t.peticion || '—')}</td>
+      <td>${esc(t.wi || '—')}</td>
+      <td class="num">${dur(t.activo)}</td>
+      <td><div class="barra">${DATOS.fases.filter((f) => t.fases[f] / t.activo >= 0.01)
+        .map((f) => `<i style="flex:${t.fases[f]};background:${color(f)}"></i>`).join('')}</div></td>
+      <td class="num">${(t.modelo / t.llamadas).toFixed(1)}</td>
+      <td class="num">${k(t.ctxMax)}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="vacio">No hay tareas con estos filtros.</td></tr>');
+
+  $('#tabla').querySelectorAll('tr.fila').forEach((tr) => {
+    const t = filas[Number(tr.dataset.i)];
+    conTip(tr.querySelector('.barra'), () => `<b>${dur(t.activo)} activo</b>${filasFases(t.fases, t.activo)}`);
+    tr.addEventListener('click', () => {
+      if (tr.nextElementSibling?.classList.contains('det')) { tr.nextElementSibling.remove(); return; }
+      const det = document.createElement('tr');
+      det.className = 'det';
+      det.innerHTML = `<td colspan="8">
+        ${t.llamadas} llamadas al modelo · contexto ${k(t.ctxInicio)} → ${k(t.ctxMediana)} → ${k(t.ctxMax)} · ${k(t.salida)} tokens generados${t.relecturas ? ` · ${t.relecturas} relecturas de archivos` : ''} · sesión <code>${esc(t.sesion)}</code>
+        <div style="margin-top:6px">Llamadas más lentas</div>
+        <ul>${t.lentas.map((l) => `<li>${dur(l.s)} · ${esc(l.fase)} · <code>${esc(l.que)}</code></li>`).join('')}</ul>
+        <div>Resultados más grandes (se reenvían en cada llamada siguiente)</div>
+        <ul>${t.resultados.map((r) => `<li>${k(r.chars)} caracteres · <code>${esc(r.que)}</code></li>`).join('')}</ul>
+      </td>`;
+      tr.after(det);
+    });
+  });
+}
+
+function pintar() {
+  ocultar();
+  const ts = tareasFiltradas();
+  kpis(ts);
+  roles(ts);
+  puntos('#g-ctx', ts, (t) => t.ctxMax, k);
+  puntos('#g-seg', ts, (t) => t.modelo / t.llamadas, (v) => `${v.toFixed(1)}s`);
+  tabla(ts);
+}
+
+if (!DATOS) {
+  document.querySelector('main').innerHTML = '<p class="vacio">Esta es la plantilla. Genera la página con <code>node .claude/hooks/sdd-timing.mjs --log</code> y abre <code>.sdd/timing.html</code>.</p>';
+} else {
+  $('#proyecto').textContent = DATOS.proyecto;
+  $('#generado').textContent = `Actualizado ${fecha(DATOS.generado)} · ${DATOS.tareas.length} tareas registradas`;
+  $('#leyenda').innerHTML = DATOS.fases.map((f) => `<span><i style="background:${color(f)}"></i>${f}</span>`).join('');
+  const listaRoles = [...new Set(DATOS.tareas.map((t) => t.rol))].sort();
+  $('#f-rol').innerHTML = '<option value="">Todos</option>' + listaRoles.map((r) => `<option value="${esc(r)}">${esc(r === '(sin rol)' ? 'sin rol' : r)}</option>`).join('');
+  for (const id of ['#f-periodo', '#f-rol', '#f-cortas']) $(id).addEventListener('change', pintar);
+  let t;
+  addEventListener('resize', () => { clearTimeout(t); t = setTimeout(pintar, 150); });
+  pintar();
+}
+</script>
+</body>
+</html>

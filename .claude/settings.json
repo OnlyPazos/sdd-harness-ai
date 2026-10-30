@@ -11,5 +11,18 @@
       "Bash(git merge:*)",
       "Bash(git rebase:*)"
     ]
+  },
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/sdd-timing.mjs\" --log",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
   }
 }

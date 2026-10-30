@@ -4,9 +4,10 @@
 #   -Tool    adaptador a copiar (por defecto: claude)
 #   -Design  copia también design-system/ y su workflow de CI
 #   -Update  actualiza a la versión actual del harness:
-#            - agents/ y .claude/commands/ se sobrescriben
+#            - agents/, .claude/commands/ y .claude/hooks/ se sobrescriben
 #            - AGENTS.md: solo se reemplaza el bloque <!-- sdd:begin/end -->
 #            - opencode.json: se fusionan los agentes del harness (requiere node)
+#            - .claude/settings.json: se fusionan permisos y hooks (requiere node)
 #            - el resto solo se copia si falta y, si difiere, se lista para
 #              fusionarlo a mano
 #   -Force   implica -Update; lo que -Update no pueda actualizar se
@@ -48,7 +49,8 @@ function Get-SmartUpdate([string]$source, [string]$target, [string]$mode) {
             if (-not (Get-Command node -ErrorAction SilentlyContinue)) { return $null }
             $out = [IO.Path]::GetTempFileName()
             try {
-                & node (Join-Path $src 'scripts/merge-opencode.mjs') $source $target $out 2>$null
+                $merge = if ((Split-Path $source -Leaf) -eq 'opencode.json') { 'merge-opencode' } else { 'merge-claude-settings' }
+                & node (Join-Path $src "scripts/$merge.mjs") $source $target $out 2>$null
                 if ($LASTEXITCODE -ne 0) { return $null }
                 return [IO.File]::ReadAllText($out)
             } finally {
@@ -63,7 +65,8 @@ function Get-SmartUpdate([string]$source, [string]$target, [string]$mode) {
 # ya existe y difiere:
 #   managed  se sobrescribe (archivo 100% del harness)
 #   block    se reemplaza solo el bloque <!-- sdd:begin/end -->
-#   json     se fusiona con scripts/merge-opencode.mjs
+#   json     se fusiona con scripts/merge-opencode.mjs (opencode.json) o
+#            scripts/merge-claude-settings.mjs (.claude/settings.json)
 #   user     nunca se sobrescribe, ni con -Force (contenido del usuario)
 #   (vacío)  solo con -Force, con copia de seguridad
 function Install-File([string]$rel, [string]$mode = '') {
@@ -136,7 +139,8 @@ switch ($Tool) {
             Install-File 'CLAUDE.md'
         }
         Install-Path '.claude/commands' managed
-        Install-Path '.claude/settings.json'
+        Install-Path '.claude/hooks' managed
+        Install-Path '.claude/settings.json' json
     }
     'opencode' { Install-Path 'opencode.json' json }
 }

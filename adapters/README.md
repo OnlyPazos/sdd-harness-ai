@@ -53,7 +53,9 @@ hacerte preguntas. `/sdd-design-researcher` preautoriza `WebSearch` y
 `WebFetch` con `allowed-tools`.
 `.claude/settings.json` bloquea `push --force`, `reset --hard` y `rm -rf`,
 y pide confirmación para push/merge/rebase. Los límites por rol (p. ej. que
-qa no edite código) los aplica el propio prompt.
+qa no edite código) los aplica el propio prompt. Su hook `SessionEnd`
+registra los tiempos de cada sesión en `.sdd/` (ver «Medir tiempos» en el
+README).
 
 ### Codex CLI, Cursor, GitHub Copilot
 Leen `AGENTS.md` de la raíz automáticamente. Escribe `rol: qa WI-AC-001`.

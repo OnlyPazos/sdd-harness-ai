@@ -2,11 +2,16 @@
 // a partir de los transcripts que guarda en ~/.claude/projects/. No necesita
 // instrumentar nada: sirve también para sesiones pasadas.
 //
-// Uso: node scripts/sdd-timing.mjs [proyecto] [--last N] [--session <id>] [--json]
+// Uso: node .claude/hooks/sdd-timing.mjs [proyecto] [--last N] [--session <id>] [--json] [--log]
 //   proyecto   ruta del proyecto analizado (por defecto: el directorio actual)
 //   --last N   número de sesiones del resumen (por defecto: 10)
 //   --session  detalle de una sesión (basta un prefijo del id, o "ultima")
 //   --json     salida en JSON en lugar de tablas
+//   --log      añade a <proyecto>/.sdd/timing.jsonl las sesiones que falten y
+//              la última (o la que indique el hook por stdin), y regenera
+//              .sdd/timing.html a partir de sdd-timing.html. Lo ejecuta el
+//              hook SessionEnd de .claude/settings.json. El registro conserva
+//              las sesiones aunque Claude Code borre sus transcripts.
 //
 // Cada tramo de tiempo se asigna a una fase:
 //   investigar  Read/Grep/Glob/web, comandos de solo lectura, subagentes Explore
@@ -23,9 +28,9 @@
 // transcript no distingue: en herramientas que deberían ser instantáneas
 // (Read, Edit…) lo que pase de PERMISO_S, y en el resto lo que pase de
 // MAX_HERRAMIENTA_S, se cuenta como "esperando".
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
 const PERMISO_S = 10;
 const MAX_HERRAMIENTA_S = 10 * 60;
@@ -40,15 +45,25 @@ const opt = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args.splice(i, 2)[1] ?? '' : undefined;
 };
-const json = args.includes('--json') && args.splice(args.indexOf('--json'), 1);
+const flag = (name) => args.includes(name) && Boolean(args.splice(args.indexOf(name), 1));
+const json = flag('--json');
+const logMode = flag('--log');
 const last = Number(opt('--last') ?? 10);
 const sessionArg = opt('--session');
-const project = resolve(args[0] ?? process.cwd());
 
-const dir = join(homedir(), '.claude', 'projects', project.replace(/[^a-zA-Z0-9]/g, '-'));
+// Como hook, Claude Code pasa por stdin { session_id, transcript_path, cwd }.
+let hook = {};
+if (logMode && !process.stdin.isTTY) {
+  try { hook = JSON.parse(readFileSync(0, 'utf8')); } catch { /* ejecución manual */ }
+}
+const project = resolve(args[0] ?? process.env.CLAUDE_PROJECT_DIR ?? hook.cwd ?? process.cwd());
+
+const dir = hook.transcript_path ? dirname(hook.transcript_path)
+  : join(homedir(), '.claude', 'projects', project.replace(/[^a-zA-Z0-9]/g, '-'));
 if (!existsSync(dir)) {
   console.error(`No hay transcripts de Claude Code para ${project}\n(buscado en ${dir})`);
-  process.exit(1);
+  // Un hook no debe fallar por esto: el proyecto aún no tiene sesiones.
+  process.exit(logMode ? 0 : 1);
 }
 
 // --- Clasificación -----------------------------------------------------------
@@ -223,7 +238,45 @@ const sesiones = readdirSync(dir).filter((f) => f.endsWith('.jsonl'))
   .map((f) => ({ id: f.slice(0, -6), file: join(dir, f), mtime: statSync(join(dir, f)).mtimeMs }))
   .sort((a, b) => b.mtime - a.mtime);
 
-if (sessionArg !== undefined) {
+const r1 = (n) => Math.round(n * 10) / 10;
+const registro = (sesion, tt) => {
+  const ctx = [...tt.ctx].sort((a, b) => a - b);
+  return {
+    sesion, rol: tt.rol, wi: tt.wi, peticion: resumen(tt.peticion, 300),
+    inicio: new Date(tt.inicio).toISOString(),
+    activo: r1(tt.activo), modelo: r1(tt.modelo), herramientas: r1(tt.herramientas),
+    llamadas: tt.llamadas, salida: tt.salida,
+    ctxInicio: tt.ctx[0] ?? 0, ctxMediana: ctx[Math.floor(ctx.length / 2)] ?? 0, ctxMax: ctx.at(-1) ?? 0,
+    fases: Object.fromEntries(FASES.map((f) => [f, r1(tt.fases[f])])),
+    lentas: tt.lentas.slice(0, 5).map((l) => ({ ...l, s: r1(l.s) })),
+    resultados: tt.resultados.slice(0, 3),
+    relecturas: Object.values(tt.lecturas).reduce((s, n) => s + n - 1, 0),
+  };
+};
+
+if (logMode) {
+  const out = join(project, '.sdd');
+  mkdirSync(out, { recursive: true });
+  // Métricas locales de esta máquina: no se versionan.
+  if (!existsSync(join(out, '.gitignore'))) writeFileSync(join(out, '.gitignore'), '*\n');
+  const logFile = join(out, 'timing.jsonl');
+  const previas = existsSync(logFile)
+    ? readFileSync(logFile, 'utf8').split('\n').filter(Boolean).flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } })
+    : [];
+  const registradas = new Set(previas.map((r) => r.sesion));
+  // Se rehacen las sesiones que falten y la actual, que puede haberse retomado.
+  const rehacer = new Set(sesiones.filter((s) => !registradas.has(s.id)).map((s) => s.id));
+  const actual = hook.session_id ?? sesiones[0]?.id;
+  if (actual) rehacer.add(actual);
+  const nuevas = sesiones.filter((s) => rehacer.has(s.id)).flatMap((s) => analizar(s.file).map((tt) => registro(s.id, tt)));
+  const filas = [...previas.filter((r) => !rehacer.has(r.sesion)), ...nuevas].sort((a, b) => a.inicio.localeCompare(b.inicio));
+  writeFileSync(logFile, filas.map((r) => JSON.stringify(r)).join('\n') + '\n');
+
+  const datos = { proyecto: basename(project), generado: new Date().toISOString(), fases: FASES, tareas: filas };
+  const plantilla = readFileSync(new URL('./sdd-timing.html', import.meta.url), 'utf8');
+  writeFileSync(join(out, 'timing.html'), plantilla.replace('/*DATOS*/null', () => JSON.stringify(datos).replace(/</g, '\\u003c')));
+  console.log(`${nuevas.length} tareas analizadas · ${filas.length} en ${logFile}\nAbre ${join(out, 'timing.html')}`);
+} else if (sessionArg !== undefined) {
   const s = sessionArg === 'ultima' || sessionArg === '' ? sesiones[0] : sesiones.find((x) => x.id.startsWith(sessionArg));
   if (!s) { console.error(`No hay ninguna sesión que empiece por "${sessionArg}"`); process.exit(1); }
   const tareas = analizar(s.file);
@@ -256,5 +309,5 @@ if (sessionArg !== undefined) {
     `${(tt.modelo / tt.llamadas).toFixed(1)}`, k(Math.max(...tt.ctx)),
     ...FASES.map((f) => pct(tt.fases[f], tt.activo)),
   ])]));
-  console.log(`\nDetalle de una sesión: node scripts/sdd-timing.mjs ${args[0] ? `"${args[0]}" ` : ''}--session <id>`);
+  console.log(`\nDetalle de una sesión: node .claude/hooks/sdd-timing.mjs ${args[0] ? `"${args[0]}" ` : ''}--session <id>`);
 }

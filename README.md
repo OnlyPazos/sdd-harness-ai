@@ -30,11 +30,11 @@ agents/
 └── design-extractor.md
 adapters/README.md
 opencode.json                 # adaptador OpenCode
-install.sh, install.ps1       # instaladores (scripts/merge-opencode.mjs los apoya)
-scripts/sdd-timing.mjs        # mide en qué se va el tiempo de cada rol
+install.sh, install.ps1       # instaladores (scripts/merge-*.mjs los apoyan)
 .claude/
 ├── commands/sdd-<rol>.md     # adaptador Claude Code
-└── settings.json             # bloqueos globales (force push, rm -rf…)
+├── hooks/sdd-timing.*        # registro de tiempos y su página
+└── settings.json             # bloqueos globales (force push, rm -rf…) y hook de tiempos
 specs/
 ├── templates/                # plantillas de stack: astro, expo, express, php
 │                             # (+ design_system.md cuando lo importes)
@@ -68,10 +68,11 @@ design-system/
 
    | Archivo | Qué hace `--update` |
    |---|---|
-   | `agents/`, `.claude/commands/` | Los sobrescribe (son del harness) |
+   | `agents/`, `.claude/commands/`, `.claude/hooks/` | Los sobrescribe (son del harness) |
    | `AGENTS.md` | Reemplaza solo el bloque entre `<!-- sdd:begin -->` y `<!-- sdd:end -->`; lo que escribas fuera se conserva |
    | `opencode.json` | Fusiona los agentes del harness y conserva tu configuración (modelos, proveedores, otros agentes). Requiere `node` |
-   | `specs/templates/`, `.claude/settings.json` | Si difieren, los lista para que los fusiones a mano |
+   | `.claude/settings.json` | Añade los permisos y hooks del harness y conserva los tuyos. Requiere `node` |
+   | `specs/templates/` | Si difieren, los lista para que los fusiones a mano |
    | `design-system/` | Nunca lo toca: es tuyo |
 
    Si tu `AGENTS.md` no tiene el bloque (instalaciones anteriores), fusiónalo
@@ -138,17 +139,25 @@ pueden estar en React, Vue, Svelte, PHP/Blade o web estándar. Flujo:
 
 ## Medir tiempos
 
-`scripts/sdd-timing.mjs` lee los transcripts que Claude Code guarda en
-`~/.claude/projects/` y reparte el tiempo activo de cada rol o petición en
-fases: investigar, implementar, testear, git, ejecutar, responder y
-esperando (preguntas y permisos). No hay que instrumentar nada, así que
-sirve también para sesiones pasadas. Se ejecuta desde el harness, sin
-instalarlo en el proyecto:
+Con Claude Code, cada vez que cierras una sesión un hook (`SessionEnd` en
+`.claude/settings.json`) ejecuta `.claude/hooks/sdd-timing.mjs --log`. El
+script lee los transcripts que Claude Code guarda en `~/.claude/projects/` y
+reparte el tiempo activo de cada rol o petición en fases: investigar,
+implementar, testear, git, ejecutar, responder y esperando (preguntas y
+permisos). Deja dos archivos en `.sdd/`, que no se versiona:
+
+- `timing.jsonl`: el registro, una línea por tarea. Conserva las sesiones
+  aunque Claude Code borre sus transcripts (a los ~30 días).
+- `timing.html`: ábrelo en el navegador. Tiempo por rol y fase, evolución
+  del contexto y de los segundos por llamada, y el detalle de cada tarea.
+
+La primera ejecución recupera también las sesiones anteriores que sigan
+disponibles. A mano, desde la raíz del proyecto:
 
 ```sh
-node scripts/sdd-timing.mjs ../mi-app                  # resumen de las 10 últimas sesiones
-node scripts/sdd-timing.mjs ../mi-app --session ultima # detalle: llamadas lentas, resultados grandes, relecturas
-node scripts/sdd-timing.mjs ../mi-app --json           # para comparar o graficar
+node .claude/hooks/sdd-timing.mjs --log            # actualiza el registro y la página
+node .claude/hooks/sdd-timing.mjs                  # resumen en la terminal
+node .claude/hooks/sdd-timing.mjs --session ultima # detalle: llamadas lentas, resultados grandes, relecturas
 ```
 
 `s/llam` (segundos por llamada al modelo) y `ctx máx` (tokens de contexto)

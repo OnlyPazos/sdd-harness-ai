@@ -5,9 +5,10 @@
 #   --tool    adaptador a copiar (por defecto: claude)
 #   --design  copia también design-system/ y su workflow de CI
 #   --update  actualiza a la versión actual del harness:
-#             - agents/ y .claude/commands/ se sobrescriben
+#             - agents/, .claude/commands/ y .claude/hooks/ se sobrescriben
 #             - AGENTS.md: solo se reemplaza el bloque <!-- sdd:begin/end -->
 #             - opencode.json: se fusionan los agentes del harness (requiere node)
+#             - .claude/settings.json: se fusionan permisos y hooks (requiere node)
 #             - el resto solo se copia si falta y, si difiere, se lista para
 #               fusionarlo a mano
 #   --force   implica --update; lo que --update no pueda actualizar se
@@ -43,7 +44,8 @@ dest=$(cd "$dest" && pwd)
 # argumento indica cómo actualizarlo con --update si ya existe y difiere:
 #   managed  se sobrescribe (archivo 100% del harness)
 #   block    se reemplaza solo el bloque <!-- sdd:begin/end -->
-#   json     se fusiona con scripts/merge-opencode.mjs
+#   json     se fusiona con scripts/merge-opencode.mjs (opencode.json) o
+#            scripts/merge-claude-settings.mjs (.claude/settings.json)
 #   user     nunca se sobrescribe, ni con --force (contenido del usuario)
 #   (vacío)  solo con --force, con copia de seguridad
 install_path() {
@@ -84,7 +86,8 @@ smart_update() {
       replace_block "$src/$1" "$dest/$1" > "$tmp" ;;
     json)
       command -v node >/dev/null 2>&1 || return 1
-      node "$src/scripts/merge-opencode.mjs" "$src/$1" "$dest/$1" "$tmp" 2>/dev/null || return 1 ;;
+      case $1 in opencode.json) merge=merge-opencode ;; *) merge=merge-claude-settings ;; esac
+      node "$src/scripts/$merge.mjs" "$src/$1" "$dest/$1" "$tmp" 2>/dev/null || return 1 ;;
     *) return 1 ;;
   esac
 }
@@ -150,7 +153,8 @@ case $tool in
       install_file CLAUDE.md
     fi
     install_path .claude/commands managed
-    install_path .claude/settings.json
+    install_path .claude/hooks managed
+    install_path .claude/settings.json json
     ;;
   opencode)
     install_path opencode.json json
