@@ -73,9 +73,15 @@ código aunque se equivoquen.
   habituales), para que el pipeline no se pare a pedir permiso. Añade los
   comandos de test de tu stack si no están.
 - Bloquea `push --force`, `reset --hard` y `rm -rf`, y pide confirmación
-  para push/merge/rebase. Si quieres que `/sdd-orchestrator` integre sin
-  esperarte, mueve `Bash(git merge:*)` a `allow` en tu
-  `.claude/settings.local.json`.
+  (`ask`) para push y rebase. `git merge` no está en ninguna lista, así que
+  también pide permiso, pero puedes preautorizarlo para que
+  `/sdd-orchestrator` integre sin esperarte, añadiendo
+  `{ "permissions": { "allow": ["Bash(git merge:*)"] } }` a tu
+  `.claude/settings.local.json`. No lo pongas en `ask` en ningún archivo:
+  Claude Code evalúa deny → ask → allow sin importar de qué archivo viene
+  cada regla, y un `ask` anula cualquier `allow`. El merge a la rama
+  principal sigue exigiendo tu confirmación por el prompt de `git-manager`,
+  no por permisos.
 - Hook `Notification`: aviso de escritorio cuando un rol espera un permiso
   o una respuesta (`SDD_NOTIFY=0` lo desactiva).
 - Hook `SessionEnd`: registra los tiempos de cada sesión en `.sdd/` (ver

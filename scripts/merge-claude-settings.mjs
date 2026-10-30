@@ -3,7 +3,8 @@
 //
 // Uso: node scripts/merge-claude-settings.mjs <harness.json> <proyecto.json> <salida.json>
 //
-// - permissions.allow/deny/ask: se añaden las reglas del harness que falten.
+// - permissions.allow/deny/ask: se añaden las reglas del harness que falten
+//   y se quitan las que el harness ya no usa (RETIRADAS).
 // - hooks: en cada evento del harness, sus hooks (los que ejecutan
 //   .claude/hooks/sdd-*) se reemplazan; los del proyecto se conservan.
 // - El resto de claves del proyecto no se tocan.
@@ -25,13 +26,19 @@ try {
   process.exit(1);
 }
 
+// Reglas que versiones anteriores del harness instalaban y ya no. Un "ask"
+// gana a cualquier "allow", también al de settings.local.json, así que
+// dejarlo impediría preautorizar ese comando en el proyecto.
+const RETIRADAS = { ask: ['Bash(git merge:*)'] };
+
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 if (isObject(src.permissions)) {
   dest.permissions = isObject(dest.permissions) ? dest.permissions : {};
   for (const key of ['allow', 'deny', 'ask']) {
     if (!Array.isArray(src.permissions[key])) continue;
-    const own = Array.isArray(dest.permissions[key]) ? dest.permissions[key] : [];
+    const own = (Array.isArray(dest.permissions[key]) ? dest.permissions[key] : [])
+      .filter((r) => !(RETIRADAS[key] ?? []).includes(r));
     dest.permissions[key] = [...new Set([...own, ...src.permissions[key]])];
   }
 }
