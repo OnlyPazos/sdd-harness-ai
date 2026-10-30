@@ -31,6 +31,7 @@ agents/
 adapters/README.md
 opencode.json                 # adaptador OpenCode
 install.sh, install.ps1       # instaladores (scripts/merge-opencode.mjs los apoya)
+scripts/sdd-timing.mjs        # mide en qué se va el tiempo de cada rol
 .claude/
 ├── commands/sdd-<rol>.md     # adaptador Claude Code
 └── settings.json             # bloqueos globales (force push, rm -rf…)
@@ -134,6 +135,24 @@ pueden estar en React, Vue, Svelte, PHP/Blade o web estándar. Flujo:
    herramienta lo permite.
 5. **Impórtala**: copia `design_system.md` a `specs/templates/` de la app.
    `spec-writer` lo cargará y no volverá a preguntar colores ni tipografía.
+
+## Medir tiempos
+
+`scripts/sdd-timing.mjs` lee los transcripts que Claude Code guarda en
+`~/.claude/projects/` y reparte el tiempo activo de cada rol o petición en
+fases: investigar, implementar, testear, git, ejecutar, responder y
+esperando (preguntas y permisos). No hay que instrumentar nada, así que
+sirve también para sesiones pasadas. Se ejecuta desde el harness, sin
+instalarlo en el proyecto:
+
+```sh
+node scripts/sdd-timing.mjs ../mi-app                  # resumen de las 10 últimas sesiones
+node scripts/sdd-timing.mjs ../mi-app --session ultima # detalle: llamadas lentas, resultados grandes, relecturas
+node scripts/sdd-timing.mjs ../mi-app --json           # para comparar o graficar
+```
+
+`s/llam` (segundos por llamada al modelo) y `ctx máx` (tokens de contexto)
+indican si el modelo va más lento porque arrastra demasiado contexto.
 
 ## Añadir un stack
 
