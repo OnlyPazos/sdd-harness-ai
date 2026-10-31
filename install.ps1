@@ -152,6 +152,36 @@ if ($Design) {
     Install-Path '.github/workflows/design-system.yml'
 }
 
+# Con Prettier en el proyecto, los archivos que el harness sobrescribe tal
+# cual van a .prettierignore: formatearlos haría fallar el check de formato
+# tras cada -Update. El bloque de AGENTS.md ya lleva prettier-ignore.
+$usesPrettier = (Get-ChildItem -LiteralPath $dest -Force -File |
+        Where-Object { $_.Name -like '.prettierrc*' -or $_.Name -like 'prettier.config.*' -or $_.Name -eq '.prettierignore' }) -or
+    ((Test-Path -LiteralPath (Join-Path $dest 'package.json')) -and
+        (Select-String -LiteralPath (Join-Path $dest 'package.json') -Pattern '"prettier"' -Quiet))
+if ($usesPrettier) {
+    $entries = @('agents/', 'scripts/sdd.mjs', 'specs/')
+    switch ($Tool) {
+        'claude' { $entries += '.claude/commands/sdd-*.md', '.claude/agents/sdd-*.md', '.claude/hooks/sdd-*', '.claude/settings.json' }
+        'opencode' { $entries += 'opencode.json' }
+    }
+    $ignoreFile = Join-Path $dest '.prettierignore'
+    $current = if (Test-Path -LiteralPath $ignoreFile) { [IO.File]::ReadAllText($ignoreFile) } else { '' }
+    $have = $current -split '\r?\n' | ForEach-Object { $_.Trim() }
+    $missing = @($entries | Where-Object { $have -notcontains $_ })
+    if ($missing.Count -gt 0) {
+        $text = ''
+        if ($current -and -not $current.EndsWith("`n")) { $text += "`n" }
+        $header = '# Harness SDD: install -Update los sobrescribe tal cual; formatearlos haría fallar el siguiente update'
+        if ($have -notcontains $header) { $text += $(if ($current) { "`n" } else { '' }) + "$header`n" }
+        $text += ($missing -join "`n") + "`n"
+        [IO.File]::AppendAllText($ignoreFile, $text, $utf8)
+        Write-Host "  añadido a .prettierignore: $($missing -join ', ')"
+    } elseif ($Update) {
+        Write-Host '  al día: .prettierignore'
+    }
+}
+
 if ($skipped.Count -gt 0) {
     Write-Host "`nRevisa y fusiona a mano estos archivos (no se han tocado):"
     $skipped | ForEach-Object { Write-Host "  - $_" }

@@ -77,6 +77,7 @@ design-system/
    | `.claude/settings.json` | Añade los permisos y hooks del harness y conserva los tuyos. Requiere `node` |
    | `specs/templates/` | Si difieren, los lista para que los fusiones a mano |
    | `design-system/` | Nunca lo toca: es tuyo |
+   | `.prettierignore` | Si el proyecto usa Prettier, añade los archivos que el harness sobrescribe tal cual (si no, cada update haría fallar el check de formato). El bloque de `AGENTS.md` ya va entre `prettier-ignore-start/end` |
 
    Si tu `AGENTS.md` no tiene el bloque (instalaciones anteriores), fusiónalo
    a mano una vez incluyendo los marcadores, o usa `--force` (`-Force`):

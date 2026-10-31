@@ -1,4 +1,5 @@
 <!-- sdd:begin · bloque gestionado por el harness SDD: install --update lo reemplaza. Escribe tus reglas propias fuera de él. -->
+<!-- prettier-ignore-start -->
 # AGENTS.md — Pipeline SDD (Spec Driven Development)
 
 Este archivo es el punto de entrada para **cualquier agente o modelo de IA**
@@ -122,4 +123,5 @@ specs/
   work_items.done.md      # Work Items integrados ya archivados
 design-system/            # base de diseño reutilizable, agnóstica de lenguaje
 ```
+<!-- prettier-ignore-end -->
 <!-- sdd:end -->

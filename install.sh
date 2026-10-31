@@ -168,6 +168,44 @@ if [ $design -eq 1 ]; then
   install_path .github/workflows/design-system.yml
 fi
 
+# Con Prettier en el proyecto, los archivos que el harness sobrescribe tal
+# cual van a .prettierignore: formatearlos haría fallar el check de formato
+# tras cada --update. El bloque de AGENTS.md ya lleva prettier-ignore.
+uses_prettier=0
+for p in "$dest"/.prettierrc* "$dest"/prettier.config.* "$dest/.prettierignore"; do
+  [ -e "$p" ] && uses_prettier=1
+done
+[ -f "$dest/package.json" ] && grep -q '"prettier"' "$dest/package.json" && uses_prettier=1
+if [ $uses_prettier -eq 1 ]; then
+  entries='agents/ scripts/sdd.mjs specs/'
+  case $tool in
+    claude) entries="$entries .claude/commands/sdd-*.md .claude/agents/sdd-*.md .claude/hooks/sdd-* .claude/settings.json" ;;
+    opencode) entries="$entries opencode.json" ;;
+  esac
+  ignore="$dest/.prettierignore"
+  header='# Harness SDD: install -Update los sobrescribe tal cual; formatearlos haría fallar el siguiente update'
+  [ -e "$ignore" ] || : > "$ignore"
+  missing=''
+  set -f
+  for e in $entries; do
+    tr -d '\r' < "$ignore" | sed 's/[[:space:]]*$//' | grep -qxF "$e" || missing="$missing $e"
+  done
+  set +f
+  if [ -n "$missing" ]; then
+    [ ! -s "$ignore" ] || [ -z "$(tail -c 1 "$ignore")" ] || echo >> "$ignore"
+    if ! tr -d '\r' < "$ignore" | grep -qxF "$header"; then
+      [ ! -s "$ignore" ] || echo >> "$ignore"
+      echo "$header" >> "$ignore"
+    fi
+    set -f
+    for e in $missing; do echo "$e" >> "$ignore"; done
+    set +f
+    echo "  añadido a .prettierignore:$missing"
+  elif [ $update -eq 1 ]; then
+    echo "  al día: .prettierignore"
+  fi
+fi
+
 if [ -s "$skiplog" ]; then
   echo
   echo "Revisa y fusiona a mano estos archivos (no se han tocado):"
