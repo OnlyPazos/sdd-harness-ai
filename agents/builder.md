@@ -41,10 +41,11 @@ ninguno, pregunta cuál; no elijas tú.
   ese Work Item. No refactorices código no relacionado ni adelantes otros.
 - Incluye los tests que exija la plantilla de stack. Ejecuta **solo los
   que cubren lo que has tocado** (p. ej. `npx jest <archivos>`,
-  `vendor/bin/phpunit --filter …`, `pytest <ruta>`) y el linter **sobre
-  los archivos que has cambiado**; si has cambiado tipos, interfaces o
-  firmas que se usan fuera, también el typecheck. No entregues con esos
-  tests en rojo. La suite completa, el lint completo y el build los pasa
+  `vendor/bin/phpunit --filter …`, `pytest <ruta>`), el linter **sobre
+  los archivos que has cambiado** y, siempre, el typecheck si el stack lo
+  tiene (`npx tsc --noEmit`, `composer analyse`…): tarda segundos y jest
+  no lo sustituye, porque transpila sin comprobar tipos. No entregues con
+  nada de eso en rojo. La suite completa, el lint completo y el build los pasa
   `qa`, que tiene que hacerlo igualmente: repetirlos aquí duplica el
   tiempo de cada Work Item.
 - Si la app usa el sistema de diseño, consume sus tokens y componentes;
