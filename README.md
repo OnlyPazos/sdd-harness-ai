@@ -107,8 +107,13 @@ Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 > subagente; en Claude Code, `/sdd-qa` ya delega siempre en un subagente.
 
 `node scripts/sdd.mjs estado` muestra en qué punto está cada Work Item y
-cuál se puede empezar. Cuando no queda ninguna rama de Work Item abierta,
-`git-manager` archiva los integrados en `specs/work_items.done.md`.
+cuál se puede empezar. `node scripts/sdd.mjs rama <WI>` y
+`node scripts/sdd.mjs integrar <WI>` hacen el camino normal de git-manager
+(crear la rama; commitear el veredicto de qa, mergear, marcar `integrado`
+y archivar) en un par de segundos y sin modelo; ante cualquier caso raro o
+un conflicto se niegan y lo resuelve `git-manager`. Es lo que usa
+`orchestrator`. Cuando no queda ninguna rama de Work Item abierta, los
+integrados se archivan en `specs/work_items.done.md`.
 
 ## Los 9 roles
 

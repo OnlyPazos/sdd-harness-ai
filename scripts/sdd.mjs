@@ -18,11 +18,26 @@
 //                             el Estado (p. ej. un BLOQUEADO de qa)
 //   archivar                  mueve los Work Items integrados a
 //                             specs/work_items.done.md
+//   rama <WI>                 crea la "Rama sugerida" desde la rama de
+//                             integración (o cambia a ella si ya existe),
+//                             tras comprobar que sus dependencias están
+//                             integradas
+//   integrar <WI>             commitea el Estado que dejó qa, mergea la rama
+//                             del Work Item en integración (--no-ff), lo pasa
+//                             a integrado y archiva si no quedan Work Items
+//                             abiertos. Ante un conflicto aborta el merge y
+//                             sale con código 1 sin tocar nada más
+//
+// rama e integrar hacen el camino normal de git-manager sin un modelo de
+// por medio. Lo que se salga de ese camino (sin rama de integración,
+// cambios sin commitear, commits de otro Work Item, conflictos) lo
+// rechazan con un mensaje para que lo resuelva git-manager.
 //
 // Los Work Items se buscan en work_items.md y en work_items.done.md.
 // Sale con código 1 ante un error de uso o de datos.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -120,6 +135,59 @@ const anotar = (w, nota) => {
   l.splice(pos, 0, entrada);
 };
 
+const cambiarEstado = (w, nuevo, nota) => {
+  if (!ESTADOS.includes(nuevo)) fallo(`Estado no válido: ${nuevo}. Válidos: ${ESTADOS.join(', ')}.`);
+  if (!(TRANSICIONES[w.estado] ?? []).includes(nuevo)) {
+    fallo(`${w.id} está en "${w.estado}": no puede pasar a "${nuevo}". Transiciones válidas: ${(TRANSICIONES[w.estado] ?? []).join(', ') || 'ninguna'}.`);
+  }
+  const e = campo(w, 'Estado') ?? fallo(`${w.id} no tiene línea "- Estado:".`);
+  w.doc.lineas[e.i] = `- Estado: ${nuevo}`;
+  if (nota) anotar(w, nota);
+  guardar(w.doc);
+};
+
+// Mueve los integrados a work_items.done.md y devuelve los movidos.
+const archivar = (p) => {
+  const mover = p.wis.filter((w) => w.doc === p.plan && w.estado === 'integrado');
+  if (!mover.length) return mover;
+  const done = p.done ?? {
+    path: DONE,
+    eol: p.plan.eol,
+    lineas: ['# Work Items integrados', '', 'Archivados desde `specs/work_items.md` con `node scripts/sdd.mjs archivar`. `sdd.mjs` los sigue leyendo.', ''],
+  };
+  while (done.lineas.length && done.lineas.at(-1).trim() === '') done.lineas.pop();
+  for (const w of mover) done.lineas.push('', ...texto(w).split('\n'));
+  done.lineas.push('');
+  for (const w of [...mover].reverse()) p.plan.lineas.splice(w.ini, w.fin - w.ini);
+  guardar(done);
+  guardar(p.plan);
+  return mover;
+};
+
+const ABIERTOS = ['en-progreso', 'qa', 'verificado'];
+
+const ejecutarGit = (args) => spawnSync('git', args, { cwd: ROOT, encoding: 'utf8' });
+const git = (...args) => {
+  const r = ejecutarGit(args);
+  if (r.error) fallo(`No se pudo ejecutar git: ${r.error.message}`);
+  if (r.status !== 0) fallo(`git ${args.join(' ')} falló:\n${(r.stderr || r.stdout).trim()}`);
+  return r.stdout.trim();
+};
+const lineasDe = (salida) => (salida ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+const ramaActual = () => git('branch', '--show-current');
+const existeRama = (rama) => git('branch', '--list', rama) !== '';
+// Rutas con cambios sin commitear, incluidos archivos nuevos sin seguimiento.
+const sinCommitear = () => ejecutarGit(['status', '--porcelain', '--untracked-files=all']).stdout
+  .split('\n').filter((l) => l.trim())
+  .map((l) => l.slice(3).split(' -> ').at(-1).replace(/^"|"$/g, ''));
+const ramaIntegracion = () => {
+  const ramas = lineasDe(git('branch', '--list', 'integration/*')).map((l) => l.replace(/^[*+]\s*/, ''));
+  if (ramas.length === 1) return ramas[0];
+  fallo(ramas.length
+    ? `Hay varias ramas de integración (${ramas.join(', ')}): decide cuál con git-manager.`
+    : 'No existe ninguna rama integration/<proyecto>: créala con git-manager (solo la primera vez).');
+};
+
 const [cmd, ...args] = process.argv.slice(2);
 const opt = (name) => {
   const i = args.indexOf(name);
@@ -134,20 +202,14 @@ switch (cmd) {
     if (args[0] && !args[0].startsWith('--')) {
       const [id, nuevo] = args;
       const w = buscar(p, id);
-      if (!ESTADOS.includes(nuevo)) fallo(`Estado no válido: ${nuevo}. Válidos: ${ESTADOS.join(', ')}.`);
-      if (!(TRANSICIONES[w.estado] ?? []).includes(nuevo)) {
-        fallo(`${id} está en "${w.estado}": no puede pasar a "${nuevo}". Transiciones válidas: ${(TRANSICIONES[w.estado] ?? []).join(', ') || 'ninguna'}.`);
-      }
-      const e = campo(w, 'Estado') ?? fallo(`${id} no tiene línea "- Estado:".`);
-      w.doc.lineas[e.i] = `- Estado: ${nuevo}`;
-      if (nota) anotar(w, nota);
-      guardar(w.doc);
-      console.log(`${id}: ${w.estado} → ${nuevo}${nota ? ' (nota añadida al Historial QA)' : ''}`);
+      const antes = w.estado;
+      cambiarEstado(w, nuevo, nota);
+      console.log(`${id}: ${antes} → ${nuevo}${nota ? ' (nota añadida al Historial QA)' : ''}`);
       break;
     }
     const listos = (w) => w.deps.every((d) => p.porId.get(d)?.estado === 'integrado');
     const fila = (w) => `  ${w.id.padEnd(14)} ${w.estado.padEnd(11)} ${w.deps.length ? `depende de ${w.deps.map((d) => `${d} (${p.porId.get(d)?.estado ?? '¿no existe?'})`).join(', ')}` : ''}`;
-    const enCurso = p.wis.filter((w) => ['en-progreso', 'qa', 'verificado'].includes(w.estado));
+    const enCurso = p.wis.filter((w) => ABIERTOS.includes(w.estado));
     const pendientes = p.wis.filter((w) => w.estado === 'pendiente');
     const integrados = p.wis.filter((w) => w.estado === 'integrado');
     const otros = p.wis.filter((w) => !ESTADOS.includes(w.estado));
@@ -217,27 +279,96 @@ switch (cmd) {
   }
 
   case 'archivar': {
-    const p = cargarPlan();
-    const mover = p.wis.filter((w) => w.doc === p.plan && w.estado === 'integrado');
-    if (!mover.length) {
-      console.log('No hay Work Items integrados que archivar.');
+    const mover = archivar(cargarPlan());
+    console.log(mover.length
+      ? `Archivados ${mover.length} Work Items en specs/work_items.done.md: ${mover.map((w) => w.id).join(', ')}`
+      : 'No hay Work Items integrados que archivar.');
+    break;
+  }
+
+  case 'rama': {
+    const [id] = args;
+    if (!id) fallo('Uso: node scripts/sdd.mjs rama <WI>');
+    const sucios = sinCommitear();
+    if (sucios.length) fallo(`Hay cambios sin commitear (${sucios.join(', ')}). Resuélvelo con git-manager antes de cambiar de rama.`);
+    const integ = ramaIntegracion();
+    const rama = buscar(cargarPlan(), id).rama || fallo(`${id} no tiene "Rama sugerida".`);
+    if (existeRama(rama)) {
+      if (ramaActual() !== rama) git('checkout', rama);
+      console.log(`${id}: en ${rama} (ya existía). Estado: ${buscar(cargarPlan(), id).estado}.`);
       break;
     }
-    const done = p.done ?? {
-      path: DONE,
-      eol: p.plan.eol,
-      lineas: ['# Work Items integrados', '', 'Archivados desde `specs/work_items.md` con `node scripts/sdd.mjs archivar`. `sdd.mjs` los sigue leyendo.', ''],
-    };
-    while (done.lineas.length && done.lineas.at(-1).trim() === '') done.lineas.pop();
-    for (const w of mover) done.lineas.push('', ...texto(w).split('\n'));
-    done.lineas.push('');
-    for (const w of [...mover].reverse()) p.plan.lineas.splice(w.ini, w.fin - w.ini);
-    guardar(done);
-    guardar(p.plan);
-    console.log(`Archivados ${mover.length} Work Items en specs/work_items.done.md: ${mover.map((w) => w.id).join(', ')}`);
+    // Lo integrado lo sabe el plan de la rama de integración.
+    if (ramaActual() !== integ) git('checkout', integ);
+    const p = cargarPlan();
+    const w = buscar(p, id);
+    if (w.estado !== 'pendiente') fallo(`${id} está en "${w.estado}" en ${integ} y no existe su rama ${rama}: revísalo con git-manager.`);
+    const faltan = w.deps.filter((d) => p.porId.get(d)?.estado !== 'integrado');
+    if (faltan.length) fallo(`${id} depende de Work Items sin integrar: ${faltan.map((d) => `${d} (${p.porId.get(d)?.estado ?? 'no existe'})`).join(', ')}.`);
+    git('checkout', '-b', rama);
+    console.log(`${id}: creada ${rama} desde ${integ}. Siguiente rol: builder.`);
+    break;
+  }
+
+  case 'integrar': {
+    const [id] = args;
+    if (!id) fallo('Uso: node scripts/sdd.mjs integrar <WI>');
+    const integ = ramaIntegracion();
+    const rama = buscar(cargarPlan(), id).rama || fallo(`${id} no tiene "Rama sugerida".`);
+    if (!existeRama(rama)) fallo(`No existe la rama ${rama}.`);
+    if (ramaActual() !== rama) {
+      const sucios = sinCommitear();
+      if (sucios.length) fallo(`Estás en ${ramaActual()} con cambios sin commitear (${sucios.join(', ')}): revísalo con git-manager.`);
+      git('checkout', rama);
+    }
+    const ajenos = sinCommitear().filter((f) => f !== 'specs/work_items.md');
+    if (ajenos.length) fallo(`${rama} tiene cambios sin commitear fuera de specs/work_items.md (${ajenos.join(', ')}): revísalo con git-manager.`);
+    const w = buscar(cargarPlan(), id);
+    if (w.estado !== 'verificado') fallo(`${id} está en "${w.estado}", no en "verificado": no se integra sin el PASS de qa.`);
+    const hechos = [];
+    if (sinCommitear().length) {
+      git('add', 'specs/work_items.md');
+      git('commit', '-m', `chore(${id}): verificado por QA`);
+      hechos.push(`chore(${id}): verificado por QA (en ${rama})`);
+    }
+    const commits = lineasDe(git('log', '--format=%s', `${integ}..${rama}`));
+    if (!commits.length) fallo(`${rama} no tiene commits que no estén ya en ${integ}.`);
+    const otros = commits.filter((c) => !c.includes(id));
+    if (otros.length) fallo(`${rama} tiene commits que no mencionan ${id}; revísalo con git-manager antes de integrar:\n${otros.map((c) => `  ${c}`).join('\n')}`);
+    // Descripción del merge: el primer commit de trabajo de la rama.
+    const trabajo = [...commits].reverse().find((c) => !/^chore\b/.test(c));
+    const desc = trabajo ? trabajo.replace(/^[^:]*:\s*/, '') : w.acs.join(', ') || id;
+    git('checkout', integ);
+    const m = ejecutarGit(['merge', '--no-ff', rama, '-m', `merge(${id}): ${desc}`]);
+    if (m.status !== 0) {
+      const conflictos = lineasDe(ejecutarGit(['diff', '--name-only', '--diff-filter=U']).stdout);
+      if (conflictos.length) {
+        ejecutarGit(['merge', '--abort']);
+        fallo(`CONFLICTO al mergear ${rama} en ${integ}: ${conflictos.join(', ')}. Merge abortado, sigues en ${integ}; resuélvelo con git-manager.`);
+      }
+      fallo(`git merge falló:\n${(m.stderr || m.stdout).trim()}`);
+    }
+    hechos.push(`merge(${id}): ${desc}`);
+    cambiarEstado(buscar(cargarPlan(), id), 'integrado');
+    git('add', 'specs/work_items.md');
+    git('commit', '-m', `chore(${id}): integrado`);
+    hechos.push(`chore(${id}): integrado`);
+    const p = cargarPlan();
+    const abiertos = p.wis.filter((x) => ABIERTOS.includes(x.estado));
+    if (abiertos.length) {
+      hechos.push(`sin archivar: siguen abiertos ${abiertos.map((x) => x.id).join(', ')}`);
+    } else {
+      const movidos = archivar(p);
+      if (movidos.length) {
+        git('add', 'specs/work_items.md', 'specs/work_items.done.md');
+        git('commit', '-m', 'chore(specs): archiva Work Items integrados');
+        hechos.push(`chore(specs): archiva ${movidos.length} Work Items integrados`);
+      }
+    }
+    console.log(`${id}: integrado en ${integ}. Commits:\n${hechos.map((h) => `  - ${h}`).join('\n')}`);
     break;
   }
 
   default:
-    fallo('Uso: node scripts/sdd.mjs <estado [--todos] | show <WI> | reglas | estado <WI> <nuevo> [--nota "texto"] | nota <WI> "texto" | archivar>');
+    fallo('Uso: node scripts/sdd.mjs <estado [--todos] | show <WI> | reglas | estado <WI> <nuevo> [--nota "texto"] | nota <WI> "texto" | archivar | rama <WI> | integrar <WI>>');
 }

@@ -28,8 +28,12 @@ try {
 
 // Reglas que versiones anteriores del harness instalaban y ya no. Un "ask"
 // gana a cualquier "allow", también al de settings.local.json, así que
-// dejarlo impediría preautorizar ese comando en el proyecto.
-const RETIRADAS = { ask: ['Bash(git merge:*)'] };
+// dejarlo impediría preautorizar ese comando en el proyecto. El allow de
+// todo sdd.mjs preautorizaría "sdd.mjs integrar", que hace un merge.
+const RETIRADAS = {
+  ask: ['Bash(git merge:*)'],
+  allow: ['Bash(node scripts/sdd.mjs:*)'],
+};
 
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 

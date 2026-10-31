@@ -39,8 +39,14 @@ ninguno, pregunta cuál; no elijas tú.
 ## Reglas estrictas
 - Implementa SOLO lo necesario para cumplir el/los Acceptance Check(s) de
   ese Work Item. No refactorices código no relacionado ni adelantes otros.
-- Incluye los tests que exija la plantilla de stack y ejecútalos. No
-  entregues con tests en rojo.
+- Incluye los tests que exija la plantilla de stack. Ejecuta **solo los
+  que cubren lo que has tocado** (p. ej. `npx jest <archivos>`,
+  `vendor/bin/phpunit --filter …`, `pytest <ruta>`) y el linter **sobre
+  los archivos que has cambiado**; si has cambiado tipos, interfaces o
+  firmas que se usan fuera, también el typecheck. No entregues con esos
+  tests en rojo. La suite completa, el lint completo y el build los pasa
+  `qa`, que tiene que hacerlo igualmente: repetirlos aquí duplica el
+  tiempo de cada Work Item.
 - Si la app usa el sistema de diseño, consume sus tokens y componentes;
   nunca valores de color/espaciado/tipografía sueltos. Si falta un
   componente, dilo: se crea con el rol `design-builder`, no tú.

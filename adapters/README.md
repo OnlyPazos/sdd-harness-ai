@@ -69,15 +69,19 @@ código aunque se equivoquen.
 
 `.claude/settings.json`:
 - Preautoriza lo que los roles ejecutan a diario y no tiene riesgo (git
-  local sin merge ni push, `scripts/sdd.mjs`, tests, lint y typecheck
-  habituales), para que el pipeline no se pare a pedir permiso. Añade los
-  comandos de test de tu stack si no están.
+  local sin merge ni push, `cd` a un subproyecto, `scripts/sdd.mjs` salvo
+  `integrar`, tests, lint y typecheck habituales), para que el pipeline no
+  se pare a pedir permiso. Añade los comandos de test de tu stack si no
+  están.
 - Bloquea `push --force`, `reset --hard` y `rm -rf`, y pide confirmación
-  (`ask`) para push y rebase. `git merge` no está en ninguna lista, así que
-  también pide permiso, pero puedes preautorizarlo para que
+  (`ask`) para push y rebase. `git merge` y `node scripts/sdd.mjs integrar`
+  (que mergea a la rama de integración) no están en ninguna lista, así que
+  también piden permiso, pero puedes preautorizarlos para que
   `/sdd-orchestrator` integre sin esperarte, añadiendo
-  `{ "permissions": { "allow": ["Bash(git merge:*)"] } }` a tu
-  `.claude/settings.local.json`. No lo pongas en `ask` en ningún archivo:
+  `{ "permissions": { "allow": ["Bash(node scripts/sdd.mjs integrar:*)", "Bash(git merge:*)"] } }`
+  a tu `.claude/settings.local.json` (el orquestador usa `integrar`;
+  `git merge` lo usa git-manager cuando `integrar` falla). No los pongas en
+  `ask` en ningún archivo:
   Claude Code evalúa deny → ask → allow sin importar de qué archivo viene
   cada regla, y un `ask` anula cualquier `allow`. El merge a la rama
   principal sigue exigiendo tu confirmación por el prompt de `git-manager`,

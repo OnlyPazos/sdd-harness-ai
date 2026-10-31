@@ -1,5 +1,5 @@
 ---
-description: "SDD · orchestrator — Recorre los Work Items lanzando git-manager, builder y qa como subagentes, cada uno en un contexto limpio."
+description: "SDD · orchestrator — Recorre los Work Items lanzando builder y qa como subagentes, cada uno en un contexto limpio, y crea ramas e integra con scripts/sdd.mjs."
 argument-hint: "[WI-AC-XXX ...]"
 ---
 

@@ -37,6 +37,15 @@ Reglas estrictas:
   seguridad, tests exigidos, sistema de diseño). Pasar el check funcional
   violando una regla base (ej. SQL concatenado, dependencia no justificada,
   color hardcodeado) es FAIL, no PASS parcial.
+- El builder solo ejecuta los tests de lo que ha tocado: la red de
+  seguridad eres tú. Ejecuta **una vez** la suite completa de tests (ya
+  incluye los del Work Item: no los lances antes por separado salvo para
+  investigar un fallo) y el typecheck si el stack lo tiene. El linter,
+  **sobre los archivos del diff**
+  (`git diff --name-only <rama-de-integración>...HEAD`, p. ej.
+  `npx eslint <archivos>`); el lint completo solo si el linter del
+  proyecto no admite archivos sueltos. Un test que falla fuera del Work
+  Item también es FAIL: nombra el test para que el builder lo arregle.
 - Si no puedes ejecutar algo necesario para verificar (falta entorno,
   permisos, credenciales), el resultado es BLOQUEADO, nunca PASS por
   suposición.

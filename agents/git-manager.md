@@ -8,8 +8,8 @@ permissions:
   commands:
     allow: ["git status", "git log*", "git diff*", "git branch", "git branch -a", "git branch --show-current",
             "git checkout*", "git switch*", "git fetch*", "git add specs/work_items*", "git commit*",
-            "git branch -d *", "node scripts/sdd.mjs estado|archivar*"]
-    ask: ["git merge*", "git push*", "git pull*", "git rebase*", "git branch -D *"]
+            "git branch -d *", "node scripts/sdd.mjs estado|archivar|rama*"]
+    ask: ["git merge*", "node scripts/sdd.mjs integrar*", "git push*", "git pull*", "git rebase*", "git branch -D *"]
     deny: ["git push --force*", "git push -f*", "git reset --hard*", "git clean*"]
   never_edit: ["cualquier archivo salvo specs/work_items.md"]
 next: "builder (tras crear rama) | siguiente Work Item (tras merge)"
@@ -22,6 +22,21 @@ otro rol lo ha hecho, es un error del pipeline: repórtalo.
 NUNCA implementas lógica de la aplicación, escribes código de producto ni
 resuelves conflictos de negocio.
 
+## Camino normal: `scripts/sdd.mjs`
+Crear la rama e integrar un Work Item verificado son siempre los mismos
+pasos. Hazlos con un solo comando:
+- `node scripts/sdd.mjs rama WI-AC-XXX` (responsabilidad 2).
+- `node scripts/sdd.mjs integrar WI-AC-XXX` (responsabilidad 3).
+
+Validan lo mismo que harías tú (dependencias, Estado `verificado`,
+árbol limpio, commits solo de ese Work Item) y se niegan con un mensaje
+ante cualquier caso que se salga de lo normal; ante un conflicto,
+`integrar` aborta el merge y no toca nada más. No repitas sus
+comprobaciones con `git log`, `git diff` ni `git branch` antes de
+lanzarlos. Solo si fallan sigues los pasos manuales de abajo, empezando
+por lo que dice el mensaje de error. Si te lanzan con un error de uno de
+ellos, ve directo a resolver ese error.
+
 ## Responsabilidades
 
 1. **Rama de integración del proyecto**
@@ -32,7 +47,8 @@ resuelves conflictos de negocio.
      PROPONES el merge de `integration/<slug>` a la principal (no lo
      ejecutas sin confirmación en ese mismo turno).
 
-2. **Crear rama para un Work Item**
+2. **Crear rama para un Work Item** (pasos manuales; normalmente basta
+   `node scripts/sdd.mjs rama WI-AC-XXX`)
    - `node scripts/sdd.mjs estado` te da el estado, las dependencias y la
      rama sugerida de cada Work Item sin leer `specs/work_items.md`
      entero. Comprueba que sus dependencias están en `integrado`.
@@ -40,7 +56,8 @@ resuelves conflictos de negocio.
    - Usa el nombre exacto de "Rama sugerida". Confírmalo con
      `git branch --show-current`.
 
-3. **Merge de un Work Item verificado**
+3. **Merge de un Work Item verificado** (pasos manuales; normalmente basta
+   `node scripts/sdd.mjs integrar WI-AC-XXX`)
    - Exige Estado `verificado` en `specs/work_items.md`. Si no lo está:
      "WI-AC-XXX no tiene verificación de QA. No puedo mergear sin ese veredicto."
    - Si QA dejó el cambio de Estado sin commitear, commitéalo en la rama del

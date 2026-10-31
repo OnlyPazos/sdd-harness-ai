@@ -22,11 +22,16 @@
     },
     "orchestrator": {
       "mode": "primary",
-      "description": "Recorre los Work Items lanzando @git-manager, @builder y @qa como subagentes",
+      "description": "Recorre los Work Items lanzando @builder y @qa como subagentes; ramas y merges con scripts/sdd.mjs (@git-manager si fallan)",
       "prompt": "{file:./agents/orchestrator.md}",
       "permission": {
         "edit": { "*": "deny" },
-        "bash": { "*": "deny", "node scripts/sdd.mjs estado*": "allow" }
+        "bash": {
+          "*": "deny",
+          "node scripts/sdd.mjs estado*": "allow",
+          "node scripts/sdd.mjs rama *": "allow",
+          "node scripts/sdd.mjs integrar *": "ask"
+        }
       }
     },
     "builder": {
@@ -119,6 +124,8 @@
           "git commit*": "allow",
           "node scripts/sdd.mjs estado*": "allow",
           "node scripts/sdd.mjs archivar": "allow",
+          "node scripts/sdd.mjs rama *": "allow",
+          "node scripts/sdd.mjs integrar *": "ask",
           "git branch -D *": "ask",
           "git merge *": "ask",
           "git pull*": "ask",
