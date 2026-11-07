@@ -63,6 +63,20 @@ tests/
 - PHPUnit como base.
 - Cada Work Item que toque lógica de negocio debe incluir al menos un
   test que verifique su Acceptance Check.
+- Los tests que necesitan un servicio externo opcional (un segundo motor
+  de base de datos, una API de pruebas…) van en su propio grupo
+  (`#[Group('sqlsrv')]`) para poder excluirlos con `--exclude-group`, y
+  comprueban la conexión **una sola vez por ejecución**, con un timeout
+  corto (≤ 2 s, sin reintentos): si no hay servicio, se marcan como
+  `skipped` con el motivo. Que cada test intente conectar por su cuenta
+  hasta agotar el timeout del driver convierte una suite de minutos en
+  media hora de errores.
+- `composer test` no puede cortarse por el `process-timeout` de Composer
+  (300 s por defecto): pon `"config": {"process-timeout": 0}` o llama a
+  PHPUnit con `@php vendor/bin/phpunit` y un tiempo de suite razonable.
+- Linter de estilo (`phpcs`/`php-cs-fixer`) y análisis estático con
+  scripts de Composer (`composer cs`, `composer analyse`) que acepten
+  archivos sueltos, para que se puedan pasar solo sobre los cambiados.
 
 ## Análisis estático
 - PHPStan o Psalm configurado desde el inicio (nivel mínimo razonable

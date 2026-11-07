@@ -46,6 +46,17 @@ Reglas estrictas:
   `npx eslint <archivos>`); el lint completo solo si el linter del
   proyecto no admite archivos sueltos. Un test que falla fuera del Work
   Item también es FAIL: nombra el test para que el builder lo arregle.
+- Si en los primeros resultados de la suite ves que hay tests que fallan
+  porque falta un servicio externo (p. ej. "No se pudo conectar a SQL
+  Server"), no esperes a que termine: córtala y relánzala excluyendo esos
+  tests con el mecanismo del proyecto (`--exclude-group sqlsrv`, o
+  `--filter '/^(?!.*sqlsrv).*$/'` si no hay grupo; `--exclude-filter` no
+  existe en PHPUnit). Esa parte queda como "no ejecutada por entorno" en
+  la nota, y si el proyecto no agrupa esos tests, dilo como observación
+  (la plantilla de stack lo exige).
+- Lanza los comandos largos en primer plano con un timeout amplio. Si tu
+  herramienta los pasa a segundo plano, espera a su aviso de fin o
+  consulta su salida de vez en cuando; nunca con bucles de `sleep`/`ping`.
 - Si no puedes ejecutar algo necesario para verificar (falta entorno,
   permisos, credenciales), el resultado es BLOQUEADO, nunca PASS por
   suposición.
