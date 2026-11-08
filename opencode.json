@@ -22,7 +22,7 @@
     },
     "orchestrator": {
       "mode": "primary",
-      "description": "Recorre los Work Items lanzando @builder y @qa como subagentes; ramas y merges con scripts/sdd.mjs (@git-manager si fallan)",
+      "description": "Recorre los Work Items (en serie o en paralelo con worktrees) lanzando @builder y @qa como subagentes; ramas, worktrees y merges con scripts/sdd.mjs (@git-manager si fallan)",
       "prompt": "{file:./agents/orchestrator.md}",
       "permission": {
         "edit": { "*": "deny" },
@@ -30,6 +30,9 @@
           "*": "deny",
           "node scripts/sdd.mjs estado*": "allow",
           "node scripts/sdd.mjs rama *": "allow",
+          "node scripts/sdd.mjs listos*": "allow",
+          "node scripts/sdd.mjs worktree *": "allow",
+          "node scripts/sdd.mjs actualizar *": "allow",
           "node scripts/sdd.mjs integrar *": "ask"
         }
       }
@@ -47,6 +50,7 @@
         },
         "bash": {
           "*": "ask",
+          "cd *": "allow",
           "git status": "allow",
           "git branch --show-current": "allow",
           "git diff*": "allow",
@@ -79,6 +83,7 @@
         "edit": { "*": "deny", "specs/work_items.md": "allow" },
         "bash": {
           "*": "ask",
+          "cd *": "allow",
           "npm test*": "allow",
           "npx jest*": "allow",
           "npm run test*": "allow",
@@ -125,6 +130,12 @@
           "node scripts/sdd.mjs estado*": "allow",
           "node scripts/sdd.mjs archivar": "allow",
           "node scripts/sdd.mjs rama *": "allow",
+          "node scripts/sdd.mjs listos*": "allow",
+          "node scripts/sdd.mjs worktree *": "allow",
+          "node scripts/sdd.mjs actualizar *": "allow",
+          "node scripts/sdd.mjs liberar *": "allow",
+          "git worktree list*": "allow",
+          "git worktree remove *": "ask",
           "node scripts/sdd.mjs integrar *": "ask",
           "git branch -D *": "ask",
           "git merge *": "ask",

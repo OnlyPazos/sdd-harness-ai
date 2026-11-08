@@ -69,8 +69,9 @@ código aunque se equivoquen.
 
 `.claude/settings.json`:
 - Preautoriza lo que los roles ejecutan a diario y no tiene riesgo (git
-  local sin merge ni push, `cd` a un subproyecto, `scripts/sdd.mjs` salvo
-  `integrar`, tests, lint y typecheck habituales), para que el pipeline no
+  local sin merge ni push, `cd` a un subproyecto o a un worktree,
+  `scripts/sdd.mjs` salvo `integrar` y `liberar`, tests, lint y typecheck
+  habituales), para que el pipeline no
   se pare a pedir permiso. Añade los comandos de test de tu stack si no
   están.
 - Bloquea `push --force`, `reset --hard` y `rm -rf`, y pide confirmación

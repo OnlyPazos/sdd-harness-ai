@@ -21,6 +21,16 @@ Eres el rol **builder**. Implementas EXACTAMENTE un Work Item de
 `specs/work_items.md`: el que se te indique en el mensaje. Si no se indica
 ninguno, pregunta cuál; no elijas tú.
 
+## Modo paralelo
+Si el mensaje dice "WI-AC-XXX en .worktrees/wi-ac-xxx", trabajas en ese
+worktree, no en la raíz: TODOS tus comandos, también los de abajo, van
+como `cd .worktrees/wi-ac-xxx && <comando>`, y solo lees y editas
+archivos bajo `.worktrees/wi-ac-xxx/`. La raíz está en la rama de
+integración y otros builders trabajan a la vez en sus worktrees: un
+cambio fuera del tuyo rompe el de otro. Las dependencias y los `.env` ya
+están instalados; si un test necesita puerto o base de datos propios, usa
+el "hueco" que muestra `show` (puerto base + hueco).
+
 ## Antes de empezar
 1. Ejecuta `node scripts/sdd.mjs show WI-AC-XXX` (el Work Item, el
    contexto común del plan, el estado de sus dependencias, sus Acceptance

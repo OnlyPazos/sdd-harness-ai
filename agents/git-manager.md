@@ -8,8 +8,10 @@ permissions:
   commands:
     allow: ["git status", "git log*", "git diff*", "git branch", "git branch -a", "git branch --show-current",
             "git checkout*", "git switch*", "git fetch*", "git add specs/work_items*", "git commit*",
-            "git branch -d *", "node scripts/sdd.mjs estado|archivar|rama*"]
-    ask: ["git merge*", "node scripts/sdd.mjs integrar*", "git push*", "git pull*", "git rebase*", "git branch -D *"]
+            "git branch -d *", "git worktree list*",
+            "node scripts/sdd.mjs estado|archivar|rama|listos|worktree|actualizar|liberar*"]
+    ask: ["git merge*", "node scripts/sdd.mjs integrar*", "git push*", "git pull*", "git rebase*", "git branch -D *",
+          "git worktree remove*"]
     deny: ["git push --force*", "git push -f*", "git reset --hard*", "git clean*"]
   never_edit: ["cualquier archivo salvo specs/work_items.md"]
 next: "builder (tras crear rama) | siguiente Work Item (tras merge)"
@@ -36,6 +38,24 @@ comprobaciones con `git log`, `git diff` ni `git branch` antes de
 lanzarlos. Solo si fallan sigues los pasos manuales de abajo, empezando
 por lo que dice el mensaje de error. Si te lanzan con un error de uno de
 ellos, ve directo a resolver ese error.
+
+## Modo paralelo (worktrees)
+Con varios Work Items a la vez, la raíz se queda en la rama de
+integración y cada Work Item vive en `.worktrees/<wi>` sobre su rama. Las
+reservas (qué Work Item ocupa qué worktree) están en
+`<git-common-dir>/sdd/reservas.json`, sin versionar; `estado` las muestra.
+- `node scripts/sdd.mjs worktree WI-AC-XXX` crea o retoma el worktree.
+- `node scripts/sdd.mjs actualizar WI-AC-XXX` mergea la integración en la
+  rama del Work Item (en su worktree).
+- `node scripts/sdd.mjs liberar WI-AC-XXX` quita la reserva y el worktree
+  si está limpio; la rama se conserva.
+- Una rama abierta en un worktree no se puede abrir en otro sitio
+  (`git checkout` falla): trabaja sobre ella con
+  `cd .worktrees/<wi> && git …`, no cambiando la rama de la raíz.
+- Un conflicto de `actualizar` se resuelve en el worktree del Work Item,
+  con las mismas reglas que un conflicto de merge (abajo). Tras
+  resolverlo, si el Work Item estaba `verificado`, devuélvelo a `qa`
+  (`node scripts/sdd.mjs estado WI-AC-XXX qa`) y commitea.
 
 ## Responsabilidades
 
@@ -70,7 +90,7 @@ ellos, ve directo a resolver ese error.
      `node scripts/sdd.mjs estado WI-AC-XXX integrado` y commitea:
      `chore(WI-AC-XXX): integrado`.
    - Si tras ese merge no queda ninguna rama de Work Item abierta (ninguno
-     en `en-progreso`, `qa` ni `verificado`), ejecuta
+     en `en-progreso`, `qa` ni `verificado`, ni en un worktree), ejecuta
      `node scripts/sdd.mjs archivar` y commitea
      `chore(specs): archiva Work Items integrados`. Con ramas abiertas no
      archives: moverías bloques que esas ramas también tocan.

@@ -20,6 +20,13 @@ Eres el rol **qa**. Verificas UN Work Item de forma independiente. NUNCA
 corriges código — si algo falla, reportas el defecto con evidencia y te
 detienes.
 
+Si el mensaje dice "WI-AC-XXX en .worktrees/wi-ac-xxx" (modo paralelo),
+verificas en ese worktree: todos tus comandos van como
+`cd .worktrees/wi-ac-xxx && <comando>` y solo lees archivos bajo esa
+carpeta. Si arrancas un servidor o usas una base de datos de tests, usa
+el puerto o el nombre base + el "hueco" que muestra `show`: otros qa
+corren a la vez.
+
 Antes de verificar, ejecuta `node scripts/sdd.mjs show WI-AC-XXX` (Work
 Item, Acceptance Checks y Decisiones) y `node scripts/sdd.mjs reglas`
 (Reglas base de stack). No leas `specs/project_specs.md` ni

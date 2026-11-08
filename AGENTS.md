@@ -37,7 +37,7 @@ tabla.
 | `design-researcher` | Solo `design-system/research/` | Investiga apps de referencia y propone direcciones de diseño | Sí |
 | `design-builder` | Solo `design-system/` | Genera e itera tokens y componentes | Sí |
 | `design-extractor` | Solo `design_system.md` | Documenta el sistema de diseño real | No |
-| `orchestrator` | Nada | Recorre los Work Items lanzando builder y qa como subagentes; ramas y merges con `sdd.mjs` (git-manager si fallan) | Solo para detenerse |
+| `orchestrator` | Nada | Recorre los Work Items (en serie o en paralelo) lanzando builder y qa como subagentes; ramas, worktrees y merges con `sdd.mjs` (git-manager si fallan) | Solo para detenerse |
 
 ## Flujo
 
@@ -51,6 +51,19 @@ spec-writer → planner → [por cada Work Item: sdd.mjs rama → builder → qa
 El bucle de Work Items se puede ejecutar a mano, rol a rol, o con
 `orchestrator` si tu herramienta tiene subagentes: cada rol corre en un
 contexto limpio y la conversación principal no acumula el de todos.
+
+**Modo paralelo** (`orchestrator --paralelo N`): varios Work Items a la
+vez, cada uno en su worktree (`.worktrees/<wi>`), mientras la raíz se
+queda en la rama de integración:
+
+```
+sdd.mjs listos → por cada uno: sdd.mjs worktree → builder → sdd.mjs actualizar → qa → sdd.mjs integrar (de uno en uno)
+```
+
+`listos` solo propone Work Items que no tocan (campo `Toca` del plan) lo
+mismo que otro en curso. `integrar` se niega si, desde el PASS de qa, la
+integración cambió archivos que ese Work Item también toca: `actualizar`
+lo devuelve a `qa` para verificar la combinación real.
 
 `design-researcher` es opcional (si ya hay marca o referencias claras, se
 empieza en `design-builder`). `design-extractor` audita a `design-builder`
@@ -68,6 +81,7 @@ fuente de verdad del avance. Cada rol solo puede hacer SUS transiciones:
 | `qa` → `verificado` | qa (PASS) |
 | `qa` → `en-progreso` + nota del defecto | qa (FAIL) |
 | `verificado` → `integrado` | git-manager (tras el merge) o `node scripts/sdd.mjs integrar` |
+| `verificado` → `qa` | `node scripts/sdd.mjs actualizar` (la integración cambió archivos que el Work Item también toca) |
 
 Las transiciones se hacen con `node scripts/sdd.mjs estado <WI> <nuevo>`,
 que rechaza las que no están en la tabla, no editando el archivo a mano.
@@ -94,9 +108,14 @@ que rechaza las que no están en la tabla, no editando el archivo a mano.
   (el directorio de trabajo ya es la raíz del proyecto) y sin variables de
   shell. Un comando compuesto no coincide con los permisos preautorizados
   y deja el pipeline parado esperando tu aprobación. Para mensajes de
-  commit de varias líneas, usa varios `-m`. Excepción: en un monorepo cuyos
-  subproyectos se ejecutan desde su carpeta, `cd <subcarpeta> && <comando>`
-  con un solo comando detrás.
+  commit de varias líneas, usa varios `-m`. Excepciones, siempre con un
+  solo comando detrás: en un monorepo cuyos subproyectos se ejecutan desde
+  su carpeta, `cd <subcarpeta> && <comando>`; en modo paralelo,
+  `cd .worktrees/<wi> && <comando>` (o `cd .worktrees/<wi>/<subcarpeta> && …`).
+- **Modo paralelo**: si te lanzan con "WI-AC-XXX en .worktrees/wi-ac-xxx",
+  ese worktree es tu raíz: todos tus comandos van con
+  `cd .worktrees/wi-ac-xxx && …` y solo lees y editas archivos bajo esa
+  carpeta. La raíz del repositorio es de otro: no la toques.
 - **Rutas relativas a la raíz**: `node scripts/sdd.mjs …`, `git add app/x.ts`,
   `cd app && npx jest …`; nunca rutas absolutas (`node C:/…/scripts/sdd.mjs`),
   `git -C <ruta>`, `npm --prefix <ruta>` ni `composer --working-dir=…`.
@@ -115,7 +134,8 @@ adapters/README.md        # cómo conectar los roles a cada herramienta
 opencode.json             # adaptador para OpenCode
 .claude/commands/         # adaptador para Claude Code (/sdd-<rol>)
 .claude/agents/           # subagentes de Claude Code (orchestrator, /sdd-qa)
-scripts/sdd.mjs           # lectura acotada de specs/, cambios de Estado, rama e integrar
+scripts/sdd.mjs           # lectura acotada de specs/, cambios de Estado, rama, worktree e integrar
+.worktrees/               # un worktree por Work Item en modo paralelo (sin versionar)
 specs/
   templates/              # plantillas de stack (+ design_system.md importado)
   project_specs.md        # lo genera spec-writer

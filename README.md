@@ -31,7 +31,7 @@ agents/
 adapters/README.md
 opencode.json                 # adaptador OpenCode
 install.sh, install.ps1       # instaladores (scripts/merge-*.mjs los apoyan)
-scripts/sdd.mjs               # lectura acotada de specs/ y cambios de Estado (lo usan los roles)
+scripts/sdd.mjs               # lectura acotada de specs/, cambios de Estado, ramas, worktrees e integración
 .claude/
 ├── commands/sdd-<rol>.md     # adaptador Claude Code
 ├── agents/sdd-<rol>.md       # subagentes: builder, qa, git-manager, design-extractor
@@ -94,7 +94,7 @@ design-system/
 | Implementar | `rol: builder WI-AC-001` | `@builder WI-AC-001` | `/sdd-builder WI-AC-001` |
 | Verificar | `rol: qa WI-AC-001` | `@qa WI-AC-001` | `/sdd-qa WI-AC-001` |
 | Integrar | `rol: git-manager merge WI-AC-001` | `@git-manager …` | `/sdd-git-manager …` |
-| Todo el bucle | — (requiere subagentes) | agente `orchestrator` (Tab) | `/sdd-orchestrator [WI-AC-…]` |
+| Todo el bucle | — (requiere subagentes) | agente `orchestrator` (Tab) | `/sdd-orchestrator [--paralelo N] [WI-AC-…]` |
 
 Cada rol termina diciendo cuál es el siguiente. El estado de cada Work Item
 (`pendiente → en-progreso → qa → verificado → integrado`) vive en
@@ -115,6 +115,28 @@ y archivar) en un par de segundos y sin modelo; ante cualquier caso raro o
 un conflicto se niegan y lo resuelve `git-manager`. Es lo que usa
 `orchestrator`. Cuando no queda ninguna rama de Work Item abierta, los
 integrados se archivan en `specs/work_items.done.md`.
+
+### Varios Work Items a la vez
+
+`/sdd-orchestrator --paralelo 3` (o "en paralelo" en OpenCode) mantiene
+hasta 3 Work Items en marcha, cada uno en su worktree `.worktrees/<wi>`,
+con su builder y su qa como subagentes; la raíz se queda en la rama de
+integración. Lo mueve `scripts/sdd.mjs`, sin modelo:
+
+| Comando | Qué hace |
+|---|---|
+| `listos [--max N]` | Pendientes con dependencias integradas que no tocan (campo `Toca` del plan) lo mismo que otro en curso |
+| `worktree <WI>` | Reserva el Work Item, crea o retoma su worktree, copia los `.env` de la raíz e instala dependencias (`npm ci`, `composer install`…) si faltan |
+| `actualizar <WI>` | Mergea la integración en la rama del Work Item; si estaba `verificado` y la integración cambió archivos que él también toca, vuelve a `qa` |
+| `integrar <WI>` | Como en serie, de uno en uno (con bloqueo); además se niega si el PASS de qa ya no cubre lo integrado después, y quita el worktree |
+| `liberar <WI>` | Abandona un Work Item: quita la reserva y el worktree (la rama se conserva) |
+
+Para que compense, el planner rellena `Toca` en cada Work Item: dos que
+tocan lo mismo no se lanzan a la vez. Ten en cuenta que cada worktree
+instala sus dependencias (disco y tiempo) y que varias suites de QA a la
+vez cargan la máquina: 2–3 suele ser el punto dulce. Si tus herramientas
+de test o lint escanean todo el repo, excluye `.worktrees/` en su
+configuración (git ya lo ignora vía `.git/info/exclude`).
 
 ## Los 9 roles
 
