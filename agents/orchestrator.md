@@ -90,6 +90,13 @@ Item vive en su worktree `.worktrees/<wi>`, que crea y retoma
    Work Items que dependían del integrado o que tocaban lo mismo.
 5. Termina cuando `listos` no da ninguno y no queda nada en marcha.
 
+Todos tus comandos van desde la raíz, tal cual: nunca `cd .worktrees/…`
+ni `git status` dentro de un worktree. En tu herramienta el `cd` puede
+persistir entre llamadas, y entonces el siguiente comando se ejecuta en el
+worktree equivocado y ya no casa con los permisos preautorizados. Para ver
+cómo va cada Work Item, `node scripts/sdd.mjs estado`; lo que hace cada
+subagente te lo dice su informe al terminar.
+
 Un Work Item detenido (ambigüedad de spec, dependencia nueva, conflicto)
 no para a los demás: deja que terminen los que están en marcha, no lances
 nuevos y entonces DETENTE con el resumen.

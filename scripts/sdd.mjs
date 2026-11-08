@@ -25,8 +25,10 @@
 //   integrar <WI>             commitea el Estado que dejó qa, mergea la rama
 //                             del Work Item en integración (--no-ff), lo pasa
 //                             a integrado y archiva si no quedan Work Items
-//                             abiertos. Ante un conflicto aborta el merge y
-//                             sale con código 1 sin tocar nada más
+//                             abiertos. Un conflicto solo en work_items.md
+//                             lo resuelve (bloque del Work Item de su rama,
+//                             el resto de integración); cualquier otro
+//                             aborta el merge y sale con código 1
 //
 // Modo paralelo (varios Work Items a la vez, cada uno en su worktree; la
 // raíz se queda en la rama de integración):
@@ -56,7 +58,7 @@
 // Los Work Items se buscan en work_items.md y en work_items.done.md.
 // Sale con código 1 ante un error de uso o de datos.
 import {
-  copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, statSync, writeFileSync,
+  copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -391,9 +393,53 @@ const commitearEstado = (dir, id, estado) => {
   gitEn(dir, 'commit', '-m', msg);
   return msg;
 };
+// Los worktrees llevan node_modules y vendor: en Windows sus rutas pasan de
+// 260 caracteres y git, sin core.longpaths, deja la carpeta a medio borrar.
+// Si git falla con el worktree limpio, lo borra Node (que sí admite rutas
+// largas) y se poda su registro. Con cambios sin commitear no se toca.
 const quitarWorktree = (wt) => {
-  const r = ejecutarGit(['worktree', 'remove', wt]);
-  return r.status === 0 ? null : (r.stderr || r.stdout).trim();
+  const st = ejecutarGit(['status', '--porcelain', '--untracked-files=all'], wt);
+  const limpio = st.status === 0 && !st.stdout.trim();
+  const r = ejecutarGit(['-c', 'core.longpaths=true', 'worktree', 'remove', wt]);
+  if (r.status === 0) return null;
+  const err = (r.stderr || r.stdout).trim();
+  if (!limpio) return err;
+  try {
+    rmSync(wt, { recursive: true, force: true, maxRetries: 3 });
+  } catch (e) {
+    return `${err.split('\n')[0]}; tampoco se pudo borrar con Node (${e.code ?? e.message}), ¿hay algún proceso usando la carpeta?`;
+  }
+  ejecutarGit(['worktree', 'prune']);
+  return null;
+};
+
+// Un merge entre la integración y la rama de un Work Item choca a menudo en
+// work_items.md: la rama cambia el bloque de su Work Item (Estado, Historial
+// QA) y la integración los de otros (integrado, archivar), a veces en líneas
+// vecinas. Se resuelve solo: el plan de la integración con el bloque de ese
+// Work Item tal como está en su rama. Devuelve true si lo resolvió todo y
+// commiteó el merge; si no, los conflictos que quedan (vacío: el merge falló
+// por otra causa).
+const resolverConflictos = (cwd, integ, rama, id) => {
+  let conflictos = lineasDe(ejecutarGit(['diff', '--name-only', '--diff-filter=U'], cwd).stdout);
+  if (!conflictos.includes(PLAN_REL)) return conflictos;
+  const mostrar = (ref) => {
+    const r = ejecutarGit(['show', `${ref}:${PLAN_REL}`]);
+    return r.status === 0 ? docDe(null, r.stdout) : null;
+  };
+  const base = mostrar(integ);
+  const suyo = mostrar(rama);
+  const bloque = (doc) => doc && secciones(doc, /^## (WI-\S+)\s*$/, 2).find((s) => s.id === id);
+  const b = bloque(base);
+  const s = bloque(suyo);
+  if (!b || !s) return conflictos;
+  base.lineas.splice(b.ini, b.fin - b.ini, ...suyo.lineas.slice(s.ini, s.fin));
+  writeFileSync(join(cwd, PLAN_REL), base.lineas.join(base.eol));
+  gitEn(cwd, 'add', PLAN_REL);
+  conflictos = conflictos.filter((f) => f !== PLAN_REL);
+  if (conflictos.length) return conflictos;
+  gitEn(cwd, 'commit', '--no-edit');
+  return true;
 };
 
 // ---------- Comandos ----------
@@ -649,14 +695,16 @@ switch (cmd) {
       const comunes = solape(integ, rama);
       const m = ejecutarGit(['merge', '--no-ff', integ, '-m', `merge(${id}): actualiza con ${integ}`], wt.path);
       if (m.status !== 0) {
-        const conflictos = lineasDe(ejecutarGit(['diff', '--name-only', '--diff-filter=U'], wt.path).stdout);
-        if (conflictos.length) {
+        const conflictos = resolverConflictos(wt.path, integ, rama, id);
+        if (conflictos !== true) {
+          if (!conflictos.length) fallo(`git merge falló:\n${(m.stderr || m.stdout).trim()}`);
           ejecutarGit(['merge', '--abort'], wt.path);
           fallo(`CONFLICTO al mergear ${integ} en ${rama}: ${conflictos.join(', ')}. Merge abortado; resuélvelo con git-manager en ${rel(wt.path)}.`);
         }
-        fallo(`git merge falló:\n${(m.stderr || m.stdout).trim()}`);
+        hechos.push(`merge(${id}): actualiza con ${integ} (${PLAN_REL} resuelto: bloque de ${id} de su rama, el resto de ${integ})`);
+      } else {
+        hechos.push(`merge(${id}): actualiza con ${integ}`);
       }
-      hechos.push(`merge(${id}): actualiza con ${integ}`);
       const w = buscar(cargarPlan({ dir: wt.path }), id);
       if (w.estado === 'verificado' && comunes.length) {
         cambiarEstado(w, 'qa', `Actualizado con ${integ}, que también cambió ${resumen(comunes, 3)}: el PASS anterior no cubre la combinación; vuelve a qa.`);
@@ -736,14 +784,16 @@ switch (cmd) {
       if (ramaActual() !== integ) git('checkout', integ);
       const m = ejecutarGit(['merge', '--no-ff', rama, '-m', `merge(${id}): ${desc}`]);
       if (m.status !== 0) {
-        const conflictos = lineasDe(ejecutarGit(['diff', '--name-only', '--diff-filter=U']).stdout);
-        if (conflictos.length) {
+        const conflictos = resolverConflictos(ROOT, integ, rama, id);
+        if (conflictos !== true) {
+          if (!conflictos.length) fallo(`git merge falló:\n${(m.stderr || m.stdout).trim()}`);
           ejecutarGit(['merge', '--abort']);
           fallo(`CONFLICTO al mergear ${rama} en ${integ}: ${conflictos.join(', ')}. Merge abortado, sigues en ${integ}; resuélvelo con git-manager${paralelo ? ` o con node scripts/sdd.mjs actualizar ${id} y repitiendo qa` : ''}.`);
         }
-        fallo(`git merge falló:\n${(m.stderr || m.stdout).trim()}`);
+        hechos.push(`merge(${id}): ${desc} (${PLAN_REL} resuelto: bloque de ${id} de su rama, el resto de ${integ})`);
+      } else {
+        hechos.push(`merge(${id}): ${desc}`);
       }
-      hechos.push(`merge(${id}): ${desc}`);
       cambiarEstado(buscar(cargarPlan(), id), 'integrado');
       git('add', PLAN_REL);
       git('commit', '-m', `chore(${id}): integrado`);
