@@ -16,6 +16,11 @@
       "Bash(node scripts/sdd.mjs nota:*)",
       "Bash(node scripts/sdd.mjs archivar:*)",
       "Bash(node scripts/sdd.mjs rama:*)",
+      "Bash(node scripts/sdd.mjs listos:*)",
+      "Bash(node scripts/sdd.mjs worktree:*)",
+      "Bash(node scripts/sdd.mjs actualizar:*)",
+      "Bash(node scripts/sdd.mjs liberar:*)",
+      "Bash(git worktree list:*)",
       "Bash(node design-system/scripts/build-tokens.mjs:*)",
       "Bash(node design-system/scripts/check-contrast.mjs:*)",
       "Bash(npm test:*)",
@@ -44,7 +49,8 @@
     ],
     "ask": [
       "Bash(git push:*)",
-      "Bash(git rebase:*)"
+      "Bash(git rebase:*)",
+      "Bash(git worktree remove:*)"
     ]
   },
   "hooks": {
