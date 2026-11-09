@@ -52,10 +52,11 @@ reservas (qué Work Item ocupa qué worktree) están en
 - Una rama abierta en un worktree no se puede abrir en otro sitio
   (`git checkout` falla): trabaja sobre ella con
   `cd .worktrees/<wi> && git …`, no cambiando la rama de la raíz.
-- Un conflicto de `actualizar` se resuelve en el worktree del Work Item,
-  con las mismas reglas que un conflicto de merge (abajo). Tras
-  resolverlo, si el Work Item estaba `verificado`, devuélvelo a `qa`
-  (`node scripts/sdd.mjs estado WI-AC-XXX qa`) y commitea.
+- Un conflicto de código en `actualizar` no es tuyo: `sdd.mjs` deja el
+  merge abierto en el worktree (y el Work Item en `qa`) para que lo
+  resuelva builder, que conoce el Work Item. No lo abortes. Si te llega
+  uno así, di que va a builder con
+  "WI-AC-XXX en .worktrees/wi-ac-xxx: resuelve el merge abierto".
 
 ## Responsabilidades
 

@@ -33,7 +33,8 @@ Reglas estrictas:
   vez dos Work Items que tocan lo mismo (se integrarían con conflictos o
   con un PASS de qa que ya no vale). Sé concreto (`app/notes/**`, no
   `app/**`). Los archivos que casi todos tocan (`package.json`, lockfile,
-  índice de rutas, registro de migraciones) son cuellos de botella: si
+  índice de rutas, registro de migraciones, diccionarios de i18n, datos
+  falsos de los tests) también van en `Toca`, y son cuellos de botella: si
   puedes, deja su cambio en un Work Item de base del que dependan los
   demás.
 - Produce `specs/work_items.md` con esta estructura por cada item:

@@ -53,17 +53,28 @@ Reglas estrictas:
   `npx eslint <archivos>`); el lint completo solo si el linter del
   proyecto no admite archivos sueltos. Un test que falla fuera del Work
   Item también es FAIL: nombra el test para que el builder lo arregle.
-- Si en los primeros resultados de la suite ves que hay tests que fallan
-  porque falta un servicio externo (p. ej. "No se pudo conectar a SQL
-  Server"), no esperes a que termine: córtala y relánzala excluyendo esos
-  tests con el mecanismo del proyecto (`--exclude-group sqlsrv`, o
-  `--filter '/^(?!.*sqlsrv).*$/'` si no hay grupo; `--exclude-filter` no
-  existe en PHPUnit). Esa parte queda como "no ejecutada por entorno" en
-  la nota, y si el proyecto no agrupa esos tests, dilo como observación
-  (la plantilla de stack lo exige).
+- Nunca pases una suite por `| tail`, `| head` ni `| grep`: retienen la
+  salida hasta el final y te impiden ver los primeros resultados. Si es
+  muy larga, redirígela a un archivo y lee ese archivo.
+- Antes de una suite que usa bases de datos u otros servicios (MySQL,
+  SQL Server, Postgres, Redis…), comprueba en segundos que responden (un
+  test suelto que conecte, o el comando de conexión del proyecto). Si
+  alguno no responde, ejecuta la suite ya sin sus tests.
+- Si aun así en los primeros resultados ves tests que fallan porque falta
+  un servicio (p. ej. "No se pudo conectar", "conexión rechazada", "denegó
+  expresamente"), no esperes a que termine: córtala y relánzala sin los
+  tests de **todos** los servicios que no responden, no solo del que
+  viste. Usa el mecanismo del proyecto: `--exclude-group <g>` solo si ese
+  grupo existe (compruébalo con `--list-groups`; un grupo inexistente no
+  excluye nada) y, si no, `--filter '/^(?!.*(sqlsrv|mysql)).*$/i'`
+  (`--exclude-filter` no existe en PHPUnit). Esa parte queda como "no
+  ejecutada por entorno" en la nota, y si el proyecto no agrupa esos
+  tests, dilo como observación (la plantilla de stack lo exige).
 - Lanza los comandos largos en primer plano con un timeout amplio. Si tu
-  herramienta los pasa a segundo plano, espera a su aviso de fin o
-  consulta su salida de vez en cuando; nunca con bucles de `sleep`/`ping`.
+  herramienta los pasa a segundo plano, no te limites a esperar su aviso:
+  lee su salida al minuto y después cada pocos minutos, y aplica la regla
+  anterior en cuanto veas fallos de conexión. Nunca bucles de
+  `sleep`/`ping`.
 - Si no puedes ejecutar algo necesario para verificar (falta entorno,
   permisos, credenciales), el resultado es BLOQUEADO, nunca PASS por
   suposición.

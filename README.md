@@ -125,9 +125,9 @@ integración. Lo mueve `scripts/sdd.mjs`, sin modelo:
 
 | Comando | Qué hace |
 |---|---|
-| `listos [--max N]` | Pendientes con dependencias integradas que no tocan (campo `Toca` del plan) lo mismo que otro en curso |
+| `listos [--max N]` | Pendientes con dependencias integradas que no tocan (campo `Toca` del plan) lo mismo que otro en curso; los que no tienen `Toca` van de uno en uno |
 | `worktree <WI>` | Reserva el Work Item, crea o retoma su worktree, copia los `.env` de la raíz e instala dependencias (`npm ci`, `composer install`…) si faltan |
-| `actualizar <WI>` | Mergea la integración en la rama del Work Item; si estaba `verificado` y la integración cambió archivos que él también toca, vuelve a `qa` |
+| `actualizar <WI>` | Mergea la integración en la rama del Work Item; si estaba `verificado` y la integración cambió archivos que él también toca, vuelve a `qa`. Un conflicto en código deja el merge abierto para que lo resuelva builder |
 | `integrar <WI>` | Como en serie, de uno en uno (con bloqueo); además se niega si el PASS de qa ya no cubre lo integrado después, y quita el worktree |
 | `liberar <WI>` | Abandona un Work Item: quita la reserva y el worktree (la rama se conserva) |
 

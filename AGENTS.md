@@ -61,9 +61,11 @@ sdd.mjs listos → por cada uno: sdd.mjs worktree → builder → sdd.mjs actual
 ```
 
 `listos` solo propone Work Items que no tocan (campo `Toca` del plan) lo
-mismo que otro en curso. `integrar` se niega si, desde el PASS de qa, la
-integración cambió archivos que ese Work Item también toca: `actualizar`
-lo devuelve a `qa` para verificar la combinación real.
+mismo que otro en curso; los que no tienen `Toca` van de uno en uno.
+`integrar` se niega si, desde el PASS de qa, la integración cambió
+archivos que ese Work Item también toca: `actualizar` lo devuelve a `qa`
+para verificar la combinación real. Si `actualizar` choca en código, deja
+el merge abierto en el worktree y lo resuelve builder.
 
 `design-researcher` es opcional (si ya hay marca o referencias claras, se
 empieza en `design-builder`). `design-extractor` audita a `design-builder`

@@ -76,12 +76,17 @@ Item vive en su worktree `.worktrees/<wi>`, que crea y retoma
 2. **Al terminar un builder**: `node scripts/sdd.mjs actualizar WI-AC-XXX`
    (trae lo integrado mientras tanto, para que qa verifique la combinación
    real) y lanza el subagente **qa** con "WI-AC-XXX en .worktrees/wi-ac-xxx".
+   Si `actualizar` da CONFLICTO y deja el "Merge ABIERTO", no es un fallo
+   para git-manager: lanza **builder** con
+   "WI-AC-XXX en .worktrees/wi-ac-xxx: resuelve el merge abierto" y,
+   cuando termine, **qa**. Lo mismo si `estado` muestra un worktree con
+   "merge abierto" al retomar.
 3. **Al terminar un qa**:
    - PASS → `node scripts/sdd.mjs integrar WI-AC-XXX`. Integra de uno en
      uno, nunca dos a la vez. Si se niega porque la integración cambió
-     archivos que ese Work Item también toca, ejecuta
+     archivos que ese Work Item también toca, o por un conflicto, ejecuta
      `node scripts/sdd.mjs actualizar WI-AC-XXX` (lo devuelve a `qa`) y
-     vuelve a lanzar **qa**.
+     vuelve a lanzar **qa** (o builder, si deja el merge abierto: paso 2).
    - FAIL → builder otra vez (paso 1, mismo worktree). Tras el 3.er FAIL
      del mismo Work Item, deja de lanzarle subagentes y pregunta al
      usuario cuando no quede nada más en marcha.
@@ -100,6 +105,11 @@ subagente te lo dice su informe al terminar.
 Un Work Item detenido (ambigüedad de spec, dependencia nueva, conflicto)
 no para a los demás: deja que terminen los que están en marcha, no lances
 nuevos y entonces DETENTE con el resumen.
+
+`listos` lanza de uno en uno los Work Items sin `Toca` (un plan anterior
+al modo paralelo no lo tiene): sin él no se puede saber si dos se pisan.
+Si en el plan faltan `Toca`, dilo en el informe final: planner puede
+añadirlos a los pendientes.
 
 ## Fallos de sdd.mjs (ambos modos)
 Si `rama`, `worktree`, `actualizar` o `integrar` salen con error (no hay

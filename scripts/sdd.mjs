@@ -34,7 +34,9 @@
 // raíz se queda en la rama de integración):
 //   listos [--max N]          pendientes con dependencias integradas, sin
 //                             reservar y que no tocan (campo "Toca") lo mismo
-//                             que otro en curso: los que se pueden lanzar ya
+//                             que otro en curso: los que se pueden lanzar ya.
+//                             Uno sin "Toca" solo se propone si no hay otro
+//                             en marcha, y mientras está, ninguno más
 //   worktree <WI> [--sin-deps]
 //                             reserva el Work Item y abre su rama en
 //                             .worktrees/<wi> (o la retoma si ya existe),
@@ -43,7 +45,9 @@
 //   actualizar <WI>           mergea la rama de integración en la del Work
 //                             Item, en su worktree. Si estaba verificado y
 //                             la integración cambió archivos que él también
-//                             toca, vuelve a qa
+//                             toca, vuelve a qa. Un conflicto en código deja
+//                             el merge abierto para que lo resuelva builder
+//                             (y el Work Item, si estaba verificado, en qa)
 //   liberar <WI>              quita la reserva y el worktree (si está limpio;
 //                             la rama se conserva)
 //
@@ -226,6 +230,7 @@ const existeRama = (rama) => git('branch', '--list', rama) !== '';
 const sinCommitear = (cwd = ROOT) => ejecutarGit(['status', '--porcelain', '--untracked-files=all'], cwd).stdout
   .split('\n').filter((l) => l.trim())
   .map((l) => l.slice(3).split(' -> ').at(-1).replace(/^"|"$/g, ''));
+const mergeAbierto = (cwd) => ejecutarGit(['rev-parse', '-q', '--verify', 'MERGE_HEAD'], cwd).status === 0;
 const ramaIntegracion = () => {
   const ramas = lineasDe(git('branch', '--list', 'integration/*')).map((l) => l.replace(/^[*+]\s*/, ''));
   if (ramas.length === 1) return ramas[0];
@@ -473,7 +478,7 @@ switch (cmd) {
     const enWorktree = (w) => Boolean(reservas[w.id]);
     const ocupados = p.wis.filter(enWorktree);
     const listos = (w) => w.deps.every((d) => p.porId.get(d)?.estado === 'integrado')
-      && !ocupados.some((o) => solapan(w.toca, o.toca).length);
+      && !ocupados.some((o) => !w.toca.length || !o.toca.length || solapan(w.toca, o.toca).length);
     const fila = (w) => `  ${w.id.padEnd(14)} ${w.estado.padEnd(11)} ${w.deps.length ? `depende de ${w.deps.map((d) => `${d} (${p.porId.get(d)?.estado ?? '¿no existe?'})`).join(', ')}` : ''}`;
     const enCurso = p.wis.filter((w) => ABIERTOS.includes(w.estado) && !enWorktree(w));
     const pendientes = p.wis.filter((w) => w.estado === 'pendiente' && !enWorktree(w));
@@ -488,7 +493,8 @@ switch (cmd) {
       console.log(`En worktrees (modo paralelo):\n${reservados.map(([id, r]) => {
         const dir = join(raiz, r.worktree);
         const est = existsSync(dir) ? (cargarPlan({ dir }).porId.get(id)?.estado ?? '¿?') : 'worktree borrado: node scripts/sdd.mjs liberar ' + id;
-        return `  ${id.padEnd(14)} ${est.padEnd(11)} ${r.worktree} (hueco ${r.hueco})`;
+        const abierto = existsSync(dir) && mergeAbierto(dir) ? ' · merge abierto: builder lo resuelve' : '';
+        return `  ${id.padEnd(14)} ${est.padEnd(11)} ${r.worktree} (hueco ${r.hueco})${abierto}`;
       }).join('\n')}`);
     }
     const siguiente = pendientes.find(listos);
@@ -602,10 +608,19 @@ switch (cmd) {
     const ocupados = Object.keys(reservas).map((id) => p.porId.get(id)).filter(Boolean);
     const elegidos = [];
     const esperan = [];
+    let sinToca = false;
     for (const w of p.wis) {
       if (w.estado !== 'pendiente' || reservas[w.id]) continue;
       if (!w.deps.every((d) => p.porId.get(d)?.estado === 'integrado')) continue;
-      const choque = [...ocupados, ...elegidos].map((o) => [o, solapan(w.toca, o.toca)]).find(([, s]) => s.length);
+      const enMarcha = [...ocupados, ...elegidos];
+      // Sin "Toca" no se sabe qué archivos pisa: va solo, sin otro a la vez.
+      const ciego = enMarcha.length ? [w, ...enMarcha].find((o) => !o.toca.length) : null;
+      if (ciego) {
+        sinToca = true;
+        esperan.push(`  ${w.id.padEnd(14)} ${ciego === w ? 'no tiene "Toca"' : `${ciego.id} no tiene "Toca"`}: no se puede comprobar que no se pisen`);
+        continue;
+      }
+      const choque = enMarcha.map((o) => [o, solapan(w.toca, o.toca)]).find(([, s]) => s.length);
       if (choque) {
         esperan.push(`  ${w.id.padEnd(14)} toca ${resumen(choque[1], 3)} como ${choque[0].id}`);
         continue;
@@ -613,10 +628,11 @@ switch (cmd) {
       if (elegidos.length < max) elegidos.push(w);
     }
     console.log(elegidos.length
-      ? `Listos para lanzar en paralelo (${elegidos.length}):\n${elegidos.map((w) => `  ${w.id.padEnd(14)} ${w.rama}${existeRama(w.rama) ? ' (rama ya existe: se retoma)' : ''}${w.toca.length ? '' : ' (sin "Toca": no se comprueba solape)'}`).join('\n')}`
-      : 'Ningún pendiente libre tiene todas sus dependencias integradas.');
+      ? `Listos para lanzar en paralelo (${elegidos.length}):\n${elegidos.map((w) => `  ${w.id.padEnd(14)} ${w.rama}${existeRama(w.rama) ? ' (rama ya existe: se retoma)' : ''}`).join('\n')}`
+      : 'Ningún pendiente libre se puede lanzar ahora.');
     if (ocupados.length) console.log(`En worktrees: ${ocupados.map((w) => w.id).join(', ')}`);
-    if (esperan.length) console.log(`Esperan a que se integre otro (mismos archivos):\n${esperan.join('\n')}`);
+    if (esperan.length) console.log(`Esperan a que se integre otro:\n${esperan.join('\n')}`);
+    if (sinToca) console.log('Los Work Items sin "Toca" van de uno en uno. Para lanzarlos en paralelo, planner debe añadirles "Toca".');
     break;
   }
 
@@ -683,6 +699,10 @@ switch (cmd) {
       const rama = buscar(cargarPlan({ ref: integ }), id).rama || fallo(`${id} no tiene "Rama sugerida".`);
       if (!existeRama(rama)) fallo(`No existe la rama ${rama}.`);
       const wt = worktreeDe(rama) ?? fallo(`${rama} no está abierta en ningún worktree: ábrela con node scripts/sdd.mjs worktree ${id}.`);
+      if (mergeAbierto(wt.path)) {
+        const quedan = lineasDe(ejecutarGit(['diff', '--name-only', '--diff-filter=U'], wt.path).stdout);
+        fallo(`${rel(wt.path)} tiene un merge de ${integ} a medio resolver${quedan.length ? ` (sin resolver: ${quedan.join(', ')})` : ' (resuelto, sin commitear)'}: termínalo con builder con "${id} en ${rel(wt.path)}: resuelve el merge abierto".`);
+      }
       if (esAncestro(integ, rama)) {
         console.log(`${id}: ${rama} ya está al día con ${integ}.`);
         return;
@@ -693,13 +713,31 @@ switch (cmd) {
       const previo = commitearEstado(wt.path, id, buscar(cargarPlan({ dir: wt.path }), id).estado);
       if (previo) hechos.push(previo);
       const comunes = solape(integ, rama);
-      const m = ejecutarGit(['merge', '--no-ff', integ, '-m', `merge(${id}): actualiza con ${integ}`], wt.path);
+      const mergear = () => ejecutarGit(['merge', '--no-ff', integ, '-m', `merge(${id}): actualiza con ${integ}`], wt.path);
+      const m = mergear();
       if (m.status !== 0) {
-        const conflictos = resolverConflictos(wt.path, integ, rama, id);
+        let conflictos = resolverConflictos(wt.path, integ, rama, id);
         if (conflictos !== true) {
-          if (!conflictos.length) fallo(`git merge falló:\n${(m.stderr || m.stdout).trim()}`);
-          ejecutarGit(['merge', '--abort'], wt.path);
-          fallo(`CONFLICTO al mergear ${integ} en ${rama}: ${conflictos.join(', ')}. Merge abortado; resuélvelo con git-manager en ${rel(wt.path)}.`);
+          if (!conflictos.length) {
+            ejecutarGit(['merge', '--abort'], wt.path);
+            fallo(`git merge falló:\n${(m.stderr || m.stdout).trim()}`);
+          }
+          // Conflicto en código: lo resuelve builder, que conoce el Work
+          // Item. El merge se deja abierto (git merge le está prohibido) y
+          // el Work Item pasa a qa, porque el código va a cambiar.
+          const w = buscar(cargarPlan({ dir: wt.path }), id);
+          if (w.estado === 'verificado') {
+            ejecutarGit(['merge', '--abort'], wt.path);
+            cambiarEstado(w, 'qa', `Actualizado con ${integ} con conflictos en ${resumen(conflictos, 3)}: el PASS anterior no cubre la combinación; vuelve a qa.`);
+            gitEn(wt.path, 'add', PLAN_REL);
+            gitEn(wt.path, 'commit', '-m', `chore(${id}): vuelve a qa tras actualizar`);
+            hechos.push(`chore(${id}): vuelve a qa tras actualizar`);
+            if (mergear().status === 0) fallo(`Error interno: el merge de ${integ} en ${rama} ya no da conflicto; repite node scripts/sdd.mjs actualizar ${id}.`);
+            conflictos = resolverConflictos(wt.path, integ, rama, id);
+            if (conflictos === true || !conflictos.length) fallo(`Error interno: el merge de ${integ} en ${rama} cambió al repetirlo; revísalo con git-manager en ${rel(wt.path)}.`);
+          }
+          console.error(`CONFLICTO al mergear ${integ} en ${rama}: ${conflictos.join(', ')}.${hechos.length ? ` Commits:\n${hechos.map((h) => `  - ${h}`).join('\n')}\n` : ' '}Merge ABIERTO en ${rel(wt.path)} (sin abortar). Siguiente: builder con "${id} en ${rel(wt.path)}: resuelve el merge abierto", después qa.`);
+          process.exit(1);
         }
         hechos.push(`merge(${id}): actualiza con ${integ} (${PLAN_REL} resuelto: bloque de ${id} de su rama, el resto de ${integ})`);
       } else {

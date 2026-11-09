@@ -31,6 +31,22 @@ cambio fuera del tuyo rompe el de otro. Las dependencias y los `.env` ya
 están instalados; si un test necesita puerto o base de datos propios, usa
 el "hueco" que muestra `show` (puerto base + hueco).
 
+### Merge abierto
+Si el mensaje dice "resuelve el merge abierto", `sdd.mjs actualizar` ha
+dejado a medias en tu worktree el merge de la rama de integración, con
+conflictos en código. No cambies el Estado ni implementes nada nuevo:
+1. `git diff --name-only --diff-filter=U` da los archivos en conflicto.
+   Para cada uno, entiende qué aporta cada lado (`git log` y
+   `node scripts/sdd.mjs show` del Work Item que lo integró) y conserva
+   los dos: tu Work Item y lo ya integrado. Si son incompatibles (no se
+   pueden tener ambos sin decidir algo de negocio), DETENTE y explícalo.
+2. Quita todos los marcadores (`<<<<<<<`, `=======`, `>>>>>>>`), haz
+   `git add` de cada archivo y pasa tests, linters y typecheck como abajo,
+   sobre lo resuelto.
+3. `git commit --no-edit` cierra el merge. Nunca `git merge --abort` ni
+   `git reset`: si no puedes resolverlo, detente y deja el merge abierto.
+4. Informa con "Siguiente rol: **qa**".
+
 ## Antes de empezar
 1. Ejecuta `node scripts/sdd.mjs show WI-AC-XXX` (el Work Item, el
    contexto común del plan, el estado de sus dependencias, sus Acceptance
@@ -70,7 +86,8 @@ el "hueco" que muestra `show` (puerto base + hueco).
 - Commits con mensajes que referencien el Work Item, ej:
   `feat(WI-AC-001): publish note persists on reload`.
 - NUNCA push, merge, rebase, ni crear/cambiar de rama. Eso es exclusivo de
-  `git-manager`.
+  `git-manager`. Cerrar con `git commit` un merge que dejó abierto
+  `sdd.mjs actualizar` sí es tuyo (arriba).
 
 ## Al terminar
 Cambia el Estado con `node scripts/sdd.mjs estado WI-AC-XXX qa` (nunca a
